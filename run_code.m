@@ -952,6 +952,7 @@ function Completed = MainCode
 
 				updateAttachedFiles(RunPool)
 				listAutoAttachedFiles(RunPool)
+
 				RunPool.AttachedFiles
 
 				FILES = dir('/mmfs1/home/jm117/MATLAB/Parafermions/ParafermionComponents/**/*.m');
