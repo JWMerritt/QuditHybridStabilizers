@@ -5,9 +5,15 @@ function Out = Mat2Number(In,Hdim)
 %       (approx L < 52*log(2)/log(Hdim))
 
 L = numel(In);
-Out = 0;
+
+Out = uint64(0);
+    %   uint64(x) is exactly what we want.
+    %   It uses all 8 bytes to just store the digits of the number.
+Base = uint64(Hdim);
+    %   This is necessary, because if we do the multiplication with double precision, we might lose some digits...
+
 for ii=1:L
-    Out = Out + In(ii)*(Hdim^(ii-1));
+    Out = Out + In(ii)*(Base^(ii-1));
 end
 
 end

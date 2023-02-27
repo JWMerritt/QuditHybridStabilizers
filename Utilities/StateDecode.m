@@ -2,7 +2,7 @@ function Out = StateDecode(In,Hdim,NumColumns)
 %   Decodes the mess we made with StateEncode.
 
 [NumRows,NumCellColumns] = size(In);
-MaxL = floor(50*log(2)/log(Hdim));
+MaxL = floor(64*log(2)/log(Hdim));
 %   We're assuming that this is the same chunk length used to encode the state...
 
 Out = zeros(NumRows,NumColumns);

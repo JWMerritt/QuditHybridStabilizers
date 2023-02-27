@@ -935,7 +935,7 @@ function Completed = MainCode
 				par_InteractingProbability = InteractingProbabilityValues(InteractingProbability_Index);
 				par_SystemSize = SystemSizeValues(SystemSize_Index);
 				par_TotalTimeSteps = TotalTimeSteps(SystemSize_Index);
-				par_RealizationsBeforeSaving = RealizationsBeforeSaving(SystemSize_Index)
+				par_RealizationsBeforeSaving = RealizationsBeforeSaving(SystemSize_Index);
 
 				UnitaryFunc = UnitaryFunc;
 				EvolFunc = EvolFunc;
@@ -946,7 +946,7 @@ function Completed = MainCode
 
 				TimeSteps_CurrentState = TimeSteps_CurrentState;
 				StateArray = StateArray;
-				TempArray = StateArray
+				TempArray = StateArray;
 
 				BKUP_tic = tic;
 

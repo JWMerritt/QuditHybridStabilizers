@@ -13,7 +13,7 @@ S = speye(NumColumns);
 for PairIndex = 0:NumPairs-2
     %PairIndex
     RandNum = randi([1,Num_C_Numbers]);
-    S_Local = GetCliff(C_Numbers_Int(RandNum,Hdim);
+    S_Local = GetCliff(C_Numbers_Int(RandNum),Hdim);
     ColumnIndex = 4*PairIndex+2*Offset;
     S(ColumnIndex+1:ColumnIndex+4, ColumnIndex+1:ColumnIndex+4) = S_Local;
 end

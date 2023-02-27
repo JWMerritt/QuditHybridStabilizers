@@ -2,14 +2,13 @@ function Out = StateEncode(In,Hdim);
 %   Takes a state - an L-by-2L matrix - and encodes the contents into numbers.
 %   Helps with the otherwise large overhead of storing tens of thousands of doubles, each of which is a single-digit integer.
 
-MaxL = floor(50*log(2)/log(Hdim));
-%   Too much over this, and we'll run into problems with the double-digit precision not holding all of the information.
-%   It's not the max, but I've chosen 2^50 to be safe. A better estimate it 2^52, that is, (2^52 +1 ) - 2^52 = 1 in MATLAB.
-%       And we could also theoretically code into the negatives.
+MaxL = floor(64*log(2)/log(Hdim));
+%   If the length of the matrix we're encoding is larger than this
+%     then the maximum number required (where all entries are Hdim-1) will code into a number larger than the uint64 limit.
 
 [NumRows,NumColumns] = size(In);
 CellColumns = ceil(NumColumns/MaxL);
-Out = zeros(NumRows,CellColumns);
+Out = zeros(NumRows,CellColumns,'uint64');
 
 for IterativeRowIndex = 1:NumRows
 
