@@ -40,7 +40,7 @@ fprintf(FileID_sh,cat(2,'  matlab -nosplash -nodisplay -r "cd /mmfs1/home/jm117/
 if RC
 	fprintf(FileID_sh,' RCrun_code_gen');
 else
-	fprintf(FileID_sh,' run_code_gen');
+	fprintf(FileID_sh,' run_code');
 end
 fprintf(FileID_sh,cat(2,'(''',CKPT_Name_Fullpath,''');DoneFile(''',JobPath,''',''',JobName,''',''',CKPT_Name_Fullpath,''');exit;"\n'));
 fprintf(FileID_sh,cat(2,'  FILE=',doneNameFull,'\n'));
