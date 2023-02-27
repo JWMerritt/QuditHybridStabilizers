@@ -5,7 +5,7 @@ function Make_CKPT(JobName,JobInformation,JobSpecifications,Hdim,IsPure,UnitaryF
 %  ckpt saved as CKPT_Name_Fullpath.mat
 %  cluster saved as "JobName", with JobStorageLocation = ClusterLocation/JobName/
 
-%   >> Edit locally (using git), then upload to hyak.
+%   >> For use with git on hyak
 
 %{
     Inputs:
