@@ -951,6 +951,14 @@ function Completed = MainCode
 				BKUP_tic = tic;
 
 				updateAttachedFiles(RunPool)
+				listAutoAttachedFiles(RunPool)
+
+				FILES = dir('/mmfs1/home/jm117/MATLAB/Parafermions/ParafermionComponents/**/*.m');
+				for ii=1:numel(FILES)
+					FILES_FULL{ii} = cat(2,FILES(ii).folder,'/',FILES(ii).name);
+				end
+				addAttachedFiles(RunPool,FILES_FULL)
+				updateAttachedFiles(RunPool)
 
 				
 	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
