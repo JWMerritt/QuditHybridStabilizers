@@ -1,4 +1,4 @@
-function Psi = Free_Interacting_Unitary(Psi,NumColumns,C_Numbers_Int,Hdim,RunOptions,Offset)
+function [Psi,Unitary] = Free_Interacting_Unitary(Psi,NumColumns,C_Numbers_Int,Hdim,RunOptions,Offset)
 %   The main unitary, that has a parameter switching between free and interacting unitary gates.
 %   Chooses between the two independently for each pair of sites.
 %   Assumes C_Numbers_Int is C_Numbers_2, where the first 24 entries are the free unitaries, and the last 24 are interacting.
@@ -69,5 +69,6 @@ else
 end
 
 Psi = mod(Psi*S,Hdim);
+Unitary = S;
 
 end

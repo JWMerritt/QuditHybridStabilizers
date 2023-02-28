@@ -1,4 +1,4 @@
-function  [Psi,NumGenerators] = TimeStepBasic(Psi,NumGenerators,C_Numbers_Int,Hdim,UnitaryFunc,RunOptions,S_Metric)
+function  [Psi,NumGenerators,Unitary1,Unitary2,Measurements1,Measurements2] = TimeStepBasic(Psi,NumGenerators,C_Numbers_Int,Hdim,UnitaryFunc,RunOptions,S_Metric)
 %   Applies one time step, with periodic BC, alternating each step.
 %   Measurements follow the pairings of the unitaries just applied.
 %
@@ -23,7 +23,7 @@ if floor(NumPairs)~=NumPairs
 end
 
 if nargin<=5
-    S_Metric = SMetric(NumRows);
+    S_Metric = SMetric(NumColumns);
 end
 
 NumSites = NumRows;
@@ -36,7 +36,7 @@ Num_C_Numbers = numel(C_Numbers_Int);
 
 %   Unitaries: %%%%%%%%%%%%%%
 
-Psi = UnitaryFunc(Psi,NumColumns,C_Numbers_Int,Hdim,RunOptions,0);
+[Psi,Unitary1] = UnitaryFunc(Psi,NumColumns,C_Numbers_Int,Hdim,RunOptions,0);
 
 
 %   Measurement: %%%%%%%%%%%
@@ -50,7 +50,7 @@ for IterativeSiteIndex=1:NumSites
     end
 end
 
-
+Measurements1 = MeasurementSites;
 
 for IterativeSiteIndex=MeasurementSites
     [Psi,NumGenerators] = Measure(Psi,NumGenerators,IterativeSiteIndex,Hdim,NumRows,NumColumns,S_Metric);
@@ -64,7 +64,7 @@ end
 
 %   Unitaries: %%%%%%%%%%%%%%
 
-Psi = UnitaryFunc(Psi,NumColumns,C_Numbers_Int,Hdim,RunOptions,1);
+[Psi,Unitary2] = UnitaryFunc(Psi,NumColumns,C_Numbers_Int,Hdim,RunOptions,1);
 
 %   Measurement: %%%%%%%%%%%
 
@@ -77,7 +77,7 @@ for IterativeSiteIndex=1:NumSites
     end
 end
 
-
+Measurements2=MeasurementSites;
 
 for IterativeSiteIndex=MeasurementSites
     [Psi,NumGenerators] = Measure(Psi,NumGenerators,IterativeSiteIndex,Hdim,NumRows,NumColumns,S_Metric);
