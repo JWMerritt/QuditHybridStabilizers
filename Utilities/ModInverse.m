@@ -2,7 +2,8 @@ function Out = ModInverse(In,d)
 % gives multiplicative inverse of 'In' modulo 'd'
 % mainly here because the gcd() approach eats a lot of computation time
 
-% v2.0
+% v2.1
+%   - fixed ModInverse(3,7).
 
 In = mod(In,d);
 
@@ -28,7 +29,7 @@ else
         switch In
         case 2
             Out = 4;
-        case 2
+        case 3
             Out = 5;
         case 4
             Out = 2;

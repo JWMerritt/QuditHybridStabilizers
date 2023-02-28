@@ -17,11 +17,19 @@ function [Psi,NumGenerators] = Measure(Psi,NumGenerators,ColumnIndex,Hdim,NumRow
                 This gives us an independent generator that commutes with the projective operator.
             Once we've run out of generators, replace the Replaceable generator with the projective operator.
         
-        There's some understainding that the state needs to be clipped first? Hopefully I'll remember what that's about...
+        There's some understanding that the state needs to be clipped first? Hopefully I'll remember what that's about...
+
+        Advanced Pseudocode:
+            Take the inner produce of Psi with MeasureGenerator. This gives you a column vector, which is the list of inner products of all generators with MeasureGenerator
+                Run down this list, until you find one that has nontrivial commutation with the projective operator.
+                If the list is all zero, add the projective operator to the end of the list (if NumGenerators<NumRows), NumGenerators++
+            Find the inverse, and multiply that generator by that number (this multiplies the generator by itself that many times). Call it the Replaceable generator.
+                We'll also work with the negation of the generator, equivalent to taking the hermitian conjugate, up to an overall factor.
+            Then, for the rest of the nonzero list entries,
     %}
     
     
-    InProd = @(a,b) mod(a*S_Metric*b',Hdim);
+    %InProd = @(a,b) mod(a*S_Metric*b',Hdim);
     
     MeasureGenerator = zeros(1,NumColumns);
     MeasureGenerator([ColumnIndex,(ColumnIndex~=NumColumns)*ColumnIndex+1]) = mod([1,-1],Hdim);
@@ -29,8 +37,52 @@ function [Psi,NumGenerators] = Measure(Psi,NumGenerators,ColumnIndex,Hdim,NumRow
     %   The logic in the second entry of the indexing is so that if ColumnIndex is the last column, the pair wraps around the system,
     %     and we have \gamma_{L} \gamma_{1}^\dagger.
     
+
+    %   Get list of inner products
+    Commutants = mod(Psi*S_Metric*MeasureGenerator',Hdim);
+    %   This gives zeroes for the sites that commute with the MeasureGenerator.
+    NonzeroCommutants = find(Commutants);
+
+    if numel(NonzeroCommutants)==0
+        % Then the state is already an eigenstate of this measurement operator.
+ 
+        if NumGenerators<NumRows
+
+            Psi(NumGenerators+1,:) = MeasureGenerator;
+                %   We now need to check if the new MeasureGenerator is already a known stabilizer
+            CheckRows = sum(RowReduceMod(Psi(1:(NumGenerators+1),:),Hdim)');
+                %   If MeasureGenerator is dependent on what's already there, then there will be a zero row in our reduced matrix.
+            if numel(find(CheckRows==0))==0
+                %   No zero rows - MeasureGenerator is independent
+                NumGenerators = NumGenerators + 1;
+            else
+                Psi(NumGenerators+1,:) = zeros(1,NumColumns);
+            end
+
+            return
+
+        end
+
+    else
+
+        %   Get the generator that we'll use to make all the others commute
+        ReplaceableGenerator = mod(ModInverse(Commutants(NonzeroCommutants(1)),Hdim)*Psi(NonzeroCommutants(1),:),Hdim);
+        %   This should have SProd(ReplaceableGenerator,MeasurementGenerator) = 1
+
+        Psi(NonzeroCommutants,:) = mod( Psi(NonzeroCommutants,:) - Commutants(NonzeroCommutants)*ReplaceableGenerator, Hdim );
+        %   This forces Psi(ii,:) to commute with MeasureGenerator.
+        %   This will also make the ReplaceableGenerator row become all zeroes, but that's okay since we'll replace it later.
+
+        %   At this point, we should have an equivalent generating set, with only ReplaceableGenerator not commuting with MeasureGenerator.
+        %   Now, we just replace the ReplaceableGenerator with the MeasureGenerator
+
+        Psi(NonzeroCommutants(1),:) = ReplaceableGenerator;
+
+    end
+
+    %{
     ReplaceableRowIndex = 0;
-    
+
     for IterativeRowIndex=1:NumGenerators
         Product = InProd(Psi(IterativeRowIndex,:),MeasureGenerator);
         if Product==0
@@ -69,7 +121,7 @@ function [Psi,NumGenerators] = Measure(Psi,NumGenerators,ColumnIndex,Hdim,NumRow
         Psi(ReplaceableRowIndex,:) = MeasureGenerator;
 
     end
-    
+    %}
     
     
     end
