@@ -155,6 +155,7 @@ CurrentNumber_TimesBackedUp = 1;
 InitializeState = false;
 
 if RealizationsBeforeSaving(1)>0
+    
     L = SystemSizeValues(1);
     %   The size of the first system we'll be working with.
 	if IsPure
@@ -167,9 +168,9 @@ if RealizationsBeforeSaving(1)>0
         StartState_Coded = 0
         Number_Generators = 0;
 	end
-	StateArray_Coded = {}
+	StateArray_Coded = cell(Number_ParallelRealizations,1)
 	for ii=1:Number_ParallelRealizations
-		StateArray_Coded = cat(1,StateArray_Coded,struct('State',StartState_Coded,'Number_Generators',Number_Generators))
+		StateArray_Coded{ii} = struct('State',StartState_Coded,'Number_Generators',Number_Generators);
 	end
 
 else

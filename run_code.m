@@ -140,8 +140,7 @@ switch RunLocation
 	case "klone_hyak"
 		addpath(genpath('/mmsf1/home/jm117/MATLAB/Parafermions'));
 	case "Lenovo_Yoga"
-		addpath(genpath('C:\Users\jmerr\Documents\MATLAB\CliffordFermions'));
-		rmpath(genpath('C:\Users\jmerr\Documents\MATLAB\CliffordFermions\Boson_Import'));
+		addpath(genpath('C:\Users\jmerr\Documents\MATLAB\ParafermionComponents'));
 	otherwise
 		fprintf("Invalid RunLocation. Update run_code() parameters.\n")
 		return
@@ -578,7 +577,7 @@ end
 	%	parpool code
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-
+%{
 if Verbose; whos; pause(10); end
 fprintf('\n X: Starting Cluster and Parpool.\n')
 
@@ -650,7 +649,7 @@ if Verbose
 	whos
 	pause(10)
 end
-
+%}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -703,7 +702,6 @@ StateArray = cell(Number_ParallelRealizations,1);
 if RealizationsBeforeSaving(SystemSize_Index)>0
 	DecodeStateArray();
 end
-
 
 
 
@@ -872,8 +870,8 @@ function Completed = MainCode
 				
 				StateArray = cell(Number_ParallelRealizations,1);
 				if Verbose; fprintf('.. Initializing StateArray'); end
-				for i=1:Number_ParallelRealizations
-					StateArray = cat(1,StateArray,struct('State',StartState,'Number_Generators',Number_Generators));
+				for ii=1:Number_ParallelRealizations
+					StateArray{ii} = struct('State',StartState,'Number_Generators',Number_Generators);
 				end
 				
 				EncodeStateArray();
@@ -950,6 +948,7 @@ function Completed = MainCode
 
 				BKUP_tic = tic;
 
+				%{
 				updateAttachedFiles(RunPool)
 				listAutoAttachedFiles(RunPool)
 
@@ -962,7 +961,7 @@ function Completed = MainCode
 				addAttachedFiles(RunPool,FILES_FULL)
 				updateAttachedFiles(RunPool)
 				RunPool.AttachedFiles
-
+				%}
 				
 	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 		%	The Parallel Loop
@@ -978,13 +977,13 @@ function Completed = MainCode
 					try
 						parfor par_Core_Index=1:Number_ParallelRealizations	%split the load among the cores
 
-							fprintf('\nEntered parfor loop')
+							if Verbose; fprintf('\n		PP>> [%d] Entered parfor loop',par_Core_Index); end;
 							k = clock;
 							seed = par_Core_Index+k(6)*10000;
 							rng(seed);
 
 							if par_RealizationsBeforeSaving>0
-								fprintf('\npar_Reals > 0\n')
+								if Verbose; fprintf('\n		PP>> [%d] par_Reals > 0',par_Core_Index); end
 
 								localTemp = StateArray{par_Core_Index};	% the parfor loop never modifies stateArray directly
 								for jj=1:min(par_RealizationsBeforeSaving, par_TotalTimeSteps-TimeSteps_CurrentState)	% for if subPeriod does't evenly divide the total time step number
@@ -995,7 +994,7 @@ function Completed = MainCode
 
 							else % sP<0
 								% run multiple times
-								fprintf('\npar_Reals < 0')
+								if Verbose; fprintf('\n		PP>> [%d] par_Reals < 0',par_Core_Index); end
 
 								localTemp = {}
 								for kk = 1:abs(par_RealizationsBeforeSaving)
@@ -1010,9 +1009,17 @@ function Completed = MainCode
 
 									for jj=1:par_TotalTimeSteps
 										[Current_State,par_NumGenerators] = EvolFunc(Current_State,par_NumGenerators,C_Numbers_Int,Hdim,UnitaryFunc,RunOptions,S_Metric);
+										fprintf('\nCore: %d, timestep: %d',par_Core_Index,jj)
 									end
 
+									currentsize = size(Current_State);
+									fprintf('\nsumsum of current state: %d, size: [%d, %d], generators: %d', sum(sum(abs(Current_State))),currentsize(1),currentsize(2),par_NumGenerators)
+
 									par_Bigram = Bigrams(Current_State,par_NumGenerators)
+									currentsize = size(par_Bigram)
+									fprintf(', bigram size: [%d, %d]',currentsize(1),currentsize(2))
+
+									fprintf('\n [%d, ] \n',par_Bigram(1,1))
 									localTemp{kk,1} = LengthDistribution(par_Bigram,par_SystemSize);		% Length Distributions
 									localTemp{kk,2} = EntropyOfAllRegionSizes(par_Bigram,par_SystemSize);	% Subsystem entropy
 									localTemp{kk,3} = par_SystemSize - par_NumGenerators;					% Purification entropy
@@ -1261,6 +1268,8 @@ function Completed = MainCode
 
 					if numel(StateArray{Realizations_Index})~=0
 
+						if Verbose; fprintf('\n 	VV: StateArray{%d}.Number_Generators = %d',Realizations_Index,StateArray{Realizations_Index}.Number_Generators); end
+							
 						TempBigrams = Bigrams(StateArray{Realizations_Index}.State,StateArray{Realizations_Index}.Number_Generators);
 						TempLengthDist{Realizations_Index} = LengthDistribution(TempBigrams,SystemSizeValues(SystemSize_Index));
 						TempS{Realizations_Index} = EntropyOfAllRegionSizes(TempBigrams,SystemSizeValues(SystemSize_Index));
@@ -1614,8 +1623,12 @@ function DecodeStateArray()
 	for ii=1:Number_ParallelRealizations
 		%	NOT StateArray, which will be initialized to {} before this.
 		StateArray{ii} = struct('State',zeros(CurrentN,2*CurrentN),'Number_Generators',0);
+
 		StateArray{ii}.State = StateDecode(StateArray_Coded{ii}.State,Hdim,2*CurrentN);
+		sz = size(StateArray{ii}.State);
+		fprintf('\n DecodeStateArray(): StateArray size = [%d, %d]. sumsum = %d',sz(1),sz(2),sum(sum(abs(StateArray{ii}.State))))
 		StateArray{ii}.Number_Generators = StateArray_Coded{ii}.Number_Generators;
+
 	end
 
 end
@@ -1721,6 +1734,7 @@ end
 %30/Nov/2021 - Apparently, adding the save code for 'initializeState' and 'matTime'
 %	fixed the "all-zero matrices getting passed" issue... 
 %** Updated to ver. 2.03.
+
 %{
 
 24/Feb/2023 - Updated the code to work with my 'Parafermion' project. I don't know 
@@ -1728,4 +1742,5 @@ end
 	better. Requires less of me remembering what each variable is.
 25/Feb/2023 - It seems to be working well enough. Gonna dump this onto klone and
 	hope for the best!
+	
 %}
