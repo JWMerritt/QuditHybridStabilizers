@@ -659,7 +659,7 @@ end
 c = clock;
 fprintf('\n Date: %.4d/%.2d/%.2d, %.2d:%.2d\n',c(1),c(2),c(3),c(4),c(5))
 
-fprintf('%d,',SystemSizeValues)
+
 
 CurrentNumberOfRealizations = -1;
 try         %   this is for when the corresponding entry of Out hasn't been initialized yet...
@@ -972,18 +972,19 @@ function Completed = MainCode
 
 				while Has_Not_Been_Enough_Time
 
-					if Verbose; fprintf('parfor loop...'); end
+					%if Verbose; fprintf('parfor loop...'); end
 
 					try
 						parfor par_Core_Index=1:Number_ParallelRealizations	%split the load among the cores
 
-							if Verbose; fprintf('\n		PP>> [%d] Entered parfor loop',par_Core_Index); end;
+							%if Verbose; fprintf('\n	VV:	PP>> [%d] Entered parfor loop',par_Core_Index); end;
+							%	it's *too* verbose! Clogs up the log files...
 							k = clock;
 							seed = par_Core_Index+k(6)*10000;
 							rng(seed);
 
 							if par_RealizationsBeforeSaving>0
-								if Verbose; fprintf('\n		PP>> [%d] par_Reals > 0',par_Core_Index); end
+								%if Verbose; fprintf('\n	VV:	PP>> [%d] par_Reals > 0',par_Core_Index); end
 
 								localTemp = StateArray{par_Core_Index};	% the parfor loop never modifies stateArray directly
 								for jj=1:min(par_RealizationsBeforeSaving, par_TotalTimeSteps-TimeSteps_CurrentState)	% for if subPeriod does't evenly divide the total time step number
@@ -994,7 +995,7 @@ function Completed = MainCode
 
 							else % sP<0
 								% run multiple times
-								if Verbose; fprintf('\n		PP>> [%d] par_Reals < 0',par_Core_Index); end
+								%if Verbose; fprintf('\n	VV:	PP>> [%d] par_Reals < 0',par_Core_Index); end
 
 								localTemp = {}
 								for kk = 1:abs(par_RealizationsBeforeSaving)
@@ -1009,17 +1010,17 @@ function Completed = MainCode
 
 									for jj=1:par_TotalTimeSteps
 										[Current_State,par_NumGenerators] = EvolFunc(Current_State,par_NumGenerators,C_Numbers_Int,Hdim,UnitaryFunc,RunOptions,S_Metric);
-										fprintf('\nCore: %d, timestep: %d',par_Core_Index,jj)
+										%fprintf('\nCore: %d, timestep: %d',par_Core_Index,jj)
 									end
 
 									currentsize = size(Current_State);
-									fprintf('\nsumsum of current state: %d, size: [%d, %d], generators: %d', sum(sum(abs(Current_State))),currentsize(1),currentsize(2),par_NumGenerators)
+									%fprintf('\nsumsum of current state: %d, size: [%d, %d], generators: %d', sum(sum(abs(Current_State))),currentsize(1),currentsize(2),par_NumGenerators)
 
 									par_Bigram = Bigrams(Current_State,par_NumGenerators)
 									currentsize = size(par_Bigram)
-									fprintf(', bigram size: [%d, %d]',currentsize(1),currentsize(2))
+									%fprintf(', bigram size: [%d, %d]',currentsize(1),currentsize(2))
 
-									fprintf('\n [%d, ] \n',par_Bigram(1,1))
+									%fprintf('\n [%d, ] \n',par_Bigram(1,1))
 									localTemp{kk,1} = LengthDistribution(par_Bigram,par_SystemSize);		% Length Distributions
 									localTemp{kk,2} = EntropyOfAllRegionSizes(par_Bigram,par_SystemSize);	% Subsystem entropy
 									localTemp{kk,3} = par_SystemSize - par_NumGenerators;					% Purification entropy
@@ -1268,7 +1269,7 @@ function Completed = MainCode
 
 					if numel(StateArray{Realizations_Index})~=0
 
-						if Verbose; fprintf('\n 	VV: StateArray{%d}.Number_Generators = %d',Realizations_Index,StateArray{Realizations_Index}.Number_Generators); end
+						%if Verbose; fprintf('\n 	VV: StateArray{%d}.Number_Generators = %d',Realizations_Index,StateArray{Realizations_Index}.Number_Generators); end
 							
 						TempBigrams = Bigrams(StateArray{Realizations_Index}.State,StateArray{Realizations_Index}.Number_Generators);
 						TempLengthDist{Realizations_Index} = LengthDistribution(TempBigrams,SystemSizeValues(SystemSize_Index));
@@ -1599,10 +1600,6 @@ end
 
 function EncodeStateArray()
 %	Encodes all entries of StateArray, in place.
-
-	StateArray
-	IsPure
-	StateArray_Coded
 
 	if RealizationsBeforeSaving(SystemSize_Index)>0
 		for ii=1:Number_ParallelRealizations

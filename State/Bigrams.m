@@ -10,10 +10,16 @@ Out = zeros(NumGenerators,2,'single');
 
 %fprintf('NumGenerators = %d',NumGenerators)
 
-for IterativeRowIndex=1:NumGenerators
-    IndexList = find(In(IterativeRowIndex,:));
-    %fprintf('Index=%d, list=[%s]\n',IterativeRowIndex,sprintf('%d,',IndexList(:)))
-    Out(IterativeRowIndex,:) = [min(IndexList),max(IndexList)];
+for InteractiveRowIndex=1:NumGenerators
+    IndexList = find(In(InteractiveRowIndex,:));
+    %fprintf('Index=%d, list=[%s]\n',InteractiveRowIndex,sprintf('%d,',IndexList(:)))
+    TempBig = [min(IndexList),max(IndexList)];
+    if numel(TempBig)==0
+        fprintf('\n     >>: ERROR in Bigrams: Zero generator found before exhausting the expected number of generators')
+        Out(InteractiveRowIndex,:) = [0,0];
+    else
+        Out(InteractiveRowIndex,:) = TempBig;
+    end
 end
 
 end

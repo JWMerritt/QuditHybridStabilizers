@@ -1,7 +1,7 @@
 function Out = LengthDistribution(Bigrams_,SystemSize)
 %   Gives the distribution of lengths of a set of bigrams. Out(L) = number of stabilizers of length L.
 
-[NumRows,NumColumns] = size(Bigrams_)
+[NumRows,NumColumns] = size(Bigrams_);
 
 Out = zeros(SystemSize,1);
 if NumRows==0
