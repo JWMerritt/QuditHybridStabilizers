@@ -9,6 +9,7 @@ Psi;
 [NumRows,NumColumns] = size(Psi);
 if NumColumns~=2*NumRows
     fprintf("Error in TimeStep(): Input state not correct size.\n")
+    fprintf(' - Input size: [%d, %d]. Needs to be [L, 2L].\n', NumRows, NumColumns)
     %Out = [];
     return
 end

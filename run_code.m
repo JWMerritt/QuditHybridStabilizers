@@ -578,7 +578,7 @@ end
 	%	parpool code
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-
+%{
 if Verbose; whos; pause(10); end
 fprintf('\n X: Starting Cluster and Parpool.\n')
 
@@ -650,7 +650,7 @@ if Verbose
 	whos
 	pause(10)
 end
-
+%}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -950,6 +950,7 @@ function Completed = MainCode
 
 				BKUP_tic = tic;
 
+				%{
 				updateAttachedFiles(RunPool)
 				listAutoAttachedFiles(RunPool)
 
@@ -962,7 +963,7 @@ function Completed = MainCode
 				addAttachedFiles(RunPool,FILES_FULL)
 				updateAttachedFiles(RunPool)
 				RunPool.AttachedFiles
-
+				%}
 				
 	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 		%	The Parallel Loop
@@ -1010,9 +1011,17 @@ function Completed = MainCode
 
 									for jj=1:par_TotalTimeSteps
 										[Current_State,par_NumGenerators] = EvolFunc(Current_State,par_NumGenerators,C_Numbers_Int,Hdim,UnitaryFunc,RunOptions,S_Metric);
+										fprintf('\nCore: %d, timestep: %d',par_Core_Index,jj)
 									end
 
+									currentsize = size(Current_State);
+									fprintf('\nsumsum of current state: %d, size: [%d, %d], generators: %d', sum(sum(abs(Current_State))),currentsize(1),currentsize(2),par_NumGenerators)
+
 									par_Bigram = Bigrams(Current_State,par_NumGenerators)
+									currentsize = size(par_Bigram)
+									fprintf(', bigram size: [%d, %d]',currentsize(1),currentsize(2))
+
+									fprintf('\n [%d, ] \n',par_Bigram(1,1))
 									localTemp{kk,1} = LengthDistribution(par_Bigram,par_SystemSize);		% Length Distributions
 									localTemp{kk,2} = EntropyOfAllRegionSizes(par_Bigram,par_SystemSize);	% Subsystem entropy
 									localTemp{kk,3} = par_SystemSize - par_NumGenerators;					% Purification entropy
@@ -1614,8 +1623,12 @@ function DecodeStateArray()
 	for ii=1:Number_ParallelRealizations
 		%	NOT StateArray, which will be initialized to {} before this.
 		StateArray{ii} = struct('State',zeros(CurrentN,2*CurrentN),'Number_Generators',0);
+
 		StateArray{ii}.State = StateDecode(StateArray_Coded{ii}.State,Hdim,2*CurrentN);
+		sz = size(StateArray{ii}.State)
+		fprintf('\n DecodeStateArray(): StateArray size = [%d, %d]. sumsum = %d',sz(1),sz(2),sum(sum(abs(stateArray{ii}.State))))
 		StateArray{ii}.Number_Generators = StateArray_Coded{ii}.Number_Generators;
+
 	end
 
 end
