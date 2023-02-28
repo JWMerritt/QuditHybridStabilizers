@@ -1625,8 +1625,13 @@ function DecodeStateArray()
 		StateArray{ii} = struct('State',zeros(CurrentN,2*CurrentN),'Number_Generators',0);
 
 		StateArray{ii}.State = StateDecode(StateArray_Coded{ii}.State,Hdim,2*CurrentN);
+<<<<<<< HEAD
 		sz = size(StateArray{ii}.State);
 		fprintf('\n DecodeStateArray(): StateArray size = [%d, %d]. sumsum = %d',sz(1),sz(2),sum(sum(abs(StateArray{ii}.State))))
+=======
+		sz = size(StateArray{ii}.State)
+		fprintf('\n DecodeStateArray(): StateArray size = [%d, %d]. sumsum = %d',sz(1),sz(2),sum(sum(abs(stateArray{ii}.State))))
+>>>>>>> 0e5e6d26e660ac1ba1a1569138b30d9d2a5677d4
 		StateArray{ii}.Number_Generators = StateArray_Coded{ii}.Number_Generators;
 
 	end
