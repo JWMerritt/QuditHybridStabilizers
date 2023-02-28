@@ -1,5 +1,5 @@
 function Out = EntropyOfRegionSize(Bigrams,SystemSize,SizeA)
-%   Finds the average entropy of all contiguous regious of size [SizeA].
+%   Finds the average entropy of all contiguous regious of size [SizeA]. This is only confirmed to be accurate for Pure states.
 
 Out = 0;
 
@@ -20,8 +20,13 @@ TimesGeneratorIsBroken = 2*(min(Lengths,SizeA)-1);
 %     to a subsystem entropy this many times. This takes into account the wrapping of the
 %     subsystem around the system's edges for periodic BC.
 
-Out = sum(TimesGeneratorIsBroken)/SystemSize;
-%   There are [SystemSize] total contiguous subsystems of size [SizeA].
+Out = (0.5*sum(TimesGeneratorIsBroken))/SystemSize;
+%   From Li, Chen, Fisher (2019), in the clipped gauge, since each point will have 2 generators' endpoints on it,
+%       the entropy of region A is equal to 1/2(b+c) = 1/2(endpoints in A with the corresponding other end outside of A).
+%   Each time a generator is broken by A, it contributes one endpoint to the above eaquation.
+%   This is only fully accurate if the state is a Pure state, since this property of the clipped gauge only holds for Pure states.
+%
+%   There are [SystemSize] total contiguous subsystems of size [SizeA], so this is what we divide by to get the average.
 
 end
 

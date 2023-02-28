@@ -160,15 +160,15 @@ if RealizationsBeforeSaving(1)>0
     %   The size of the first system we'll be working with.
 	if IsPure
         %StartState = TrivState(L);
-        StartState_Coded = StateEncode(mod(TrivState(L),Hdim),Hdim)
+        StartState_Coded = StateEncode(mod(TrivState(L),Hdim),Hdim);
         %   StateEncode expects no negative numbers, so mod() is required.
         Number_Generators = L;
     else
         %StartState = zeros(L,2*L);
-        StartState_Coded = 0
+        StartState_Coded = 0;
         Number_Generators = 0;
 	end
-	StateArray_Coded = cell(Number_ParallelRealizations,1)
+	StateArray_Coded = cell(Number_ParallelRealizations,1);
 	for ii=1:Number_ParallelRealizations
 		StateArray_Coded{ii} = struct('State',StartState_Coded,'Number_Generators',Number_Generators);
 	end
@@ -311,3 +311,7 @@ end
 %14/Apr/2021 - Edited to klone form, has 'EvolFunc', 'tags', and 'specs' as inputs.
 %   Now has CKPT_Name_Full as input, too.
 %28/Jul/2021 - Added code to double check that the number of workers in the parcluster is the NumCores we would like.
+%{
+28/Feb/2023 - Finished updating it to use the Parafermion parameters.
+
+}
