@@ -165,7 +165,7 @@ if RealizationsBeforeSaving(1)>0
         Number_Generators = L;
     else
         %StartState = zeros(L,2*L);
-        StartState_Coded = 0;
+        StartState_Coded = StateEncode(zeros(L,2*L),Hdim);
         Number_Generators = 0;
 	end
 	StateArray_Coded = cell(Number_ParallelRealizations,1);
@@ -314,4 +314,4 @@ end
 %{
 28/Feb/2023 - Finished updating it to use the Parafermion parameters.
 
-}
+%}

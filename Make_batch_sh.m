@@ -39,9 +39,9 @@ fprintf(FileID_sh,cat(2,'  matlab -nosplash -nodisplay -r "cd /mmfs1/home/jm117/
 if RC
     fprintf(FileID_sh,' RCrun_code_gen');
 else
-    fprintf(FileID_sh,cat(2,' batch_code(''',CKPT_Name_Fullpath,''',''',JobName,''',''',Diary_Name_Fullpath,');'));
+    fprintf(FileID_sh,cat(2,' batch_code(''',CKPT_Name_Fullpath,''',''',JobName,''',''',Diary_Name_Fullpath,''');'));
 end
-fprintf(FileID_sh,cat(2,'(''',CKPT_Name_Fullpath,''');DoneFile(''',JobPath,''',''',JobName,''',''',CKPT_Name_Fullpath,''');exit;"\n'));
+fprintf(FileID_sh,cat(2,'DoneFile(''',JobPath,''',''',JobName,''',''',CKPT_Name_Fullpath,''');exit;"\n'));
 fprintf(FileID_sh,cat(2,'  FILE=',doneNameFull,'\n'));
 fprintf(FileID_sh,cat(2,'  if test -f "$FILE"; then\n    echo "Job completed";\n    break\n  fi\ndone\n\nexit 0'));
 %fprintf(FileID_sh,cat(2,'  \nmatlab -nosplash -nodisplay -r "cd /gscratch/home/jm117/MATLAB/Free_Fermions; addpath(genpath(''/gscratch/home/jm117/MATLAB'')); DoneFile(''',JobPath,''',''',JobName,''');exit;"\n\nexit 0'));

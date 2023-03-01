@@ -1249,7 +1249,7 @@ function Completed = MainCode
 			%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 			%	Calculate the quantities of this realization:
 
-			if RealizationsPerSystemSize(SystemSize_Index) > 0			%calculate the entropies
+			if RealizationsBeforeSaving(SystemSize_Index) > 0			%calculate the entropies
 
 				if Verbose; fprintf('\n VV: Doing entropy calculation...'); end 
 				
@@ -1297,7 +1297,7 @@ function Completed = MainCode
 				TempLengthDist = {};
 				TempS = {};
 				TempMixedS = {};
-				RNum = Number_ParallelRealizations*abs(RealizationsPerSystemSize(SystemSize_Index)) %subRealizations(N_i)*abs(subPeriod(N_i));
+				RNum = Number_ParallelRealizations*abs(RealizationsBeforeSaving(SystemSize_Index));	 %subRealizations(N_i)*abs(subPeriod(N_i));
 				TempRealizationCount = mat2cell(ones(RNum,1),ones(1,RNum));
 				%	this says to make an RNum x 1 matrix of ones, and split them into a 20 row cell, with one entry per row.
 				%	it gives us an RNum x 1 cell with 1 in each entry, like in the subPeriod>0 case.
@@ -1504,7 +1504,7 @@ function SaveSuccesses__ = SaveData(File,ItemsList,LoadTest,ref)
 				save(File,ItemsList{:});
 				if LoadTest
 					tO__ = load(File);
-					fprintf(tO__.JobName)
+					%fprintf(tO__.JobName)
 					clear tO__;
 				end
 				SaveSuccesses__ = true;
@@ -1623,8 +1623,11 @@ function DecodeStateArray()
 
 		StateArray{ii}.State = StateDecode(StateArray_Coded{ii}.State,Hdim,2*CurrentN);
 
-		sz = size(StateArray{ii}.State);
-		fprintf('\n DecodeStateArray(): StateArray size = [%d, %d]. sumsum = %d',sz(1),sz(2),sum(sum(abs(StateArray{ii}.State))))
+		if ii==1
+			sz = size(StateArray{ii}.State);
+			fprintf('\n DecodeStateArray(): StateArray size = [%d, %d]. sumsum = %d',sz(1),sz(2),sum(sum(abs(StateArray{ii}.State))))
+			%	We're gonna keep this line in, since it should only activate once at the start of the code.
+		end
 
 		StateArray{ii}.Number_Generators = StateArray_Coded{ii}.Number_Generators;
 
