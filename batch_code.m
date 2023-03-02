@@ -10,7 +10,9 @@ c = clock;
 
 fprintf('\n B: Starting batch_code.')
 fprintf('\n Date: %.4d/%.2d/%.2d, %.2d:%.2d',c(1),c(2),c(3),c(4),c(5))
-fprintf('\nStarting cluster with ''%s'' profile.',JobName)
+fprintf('\nStarting cluster with ''%s'' profile.\n\n........\n',JobName)
+
+feature('numcores')
 
 MyCluster = parcluster(JobName)
 

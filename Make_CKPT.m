@@ -251,8 +251,11 @@ if ~RC  %if RC, then run_code will use 'RunContainer' profile
         end
     end
 	
-	if MyCluster.NumWorkers~=Number_ParallelRealizations
-		error('\nError! Cluster cores not equal to Number_ParallelRealizations. Server probably doesn''t have enough cores alloted to MATLAB...\n')
+	if MyCluster.NumWorkers<Number_ParallelRealizations
+		error('\nError! Cluster cores less than Number_ParallelRealizations. Server probably doesn''t have enough cores alloted to MATLAB...\n')
+    elseif MyCluster.NumWorkers>Number_ParallelRealizations
+        fprintf('\nCluster has more cores than Number_ParallelRealizations. Decreasing...')
+        MyCluster.NumWorkers = Number_ParallelRealizations;
 	end
 
     mkdir(ClusPathFull)
