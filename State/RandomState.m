@@ -8,8 +8,8 @@ end
 Out = TrivState(NumSites);
 
 for IterativeCircuitIndex = 1:CircuitDepth
-    Out = GetSystemSymplectic(NumSites,C_Numbers_Int,Hdim,0)*Out;
-    Out = GetSystemSymplectic(NumSites,C_Numbers_Int,Hdim,1)*Out;
+    Out = mod(Out*GetSystemSymplectic(2*NumSites,C_Numbers_Int,Hdim,0),Hdim);
+    Out = mod(Out*GetSystemSymplectic(2*NumSites,C_Numbers_Int,Hdim,1),Hdim);
 end
 
 Out = mod(Out,Hdim);
