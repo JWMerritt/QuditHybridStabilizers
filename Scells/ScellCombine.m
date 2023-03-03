@@ -8,16 +8,22 @@ Out = In1;
 for InIndex=1:numel(In2)
 
     InNow = In2{InIndex};
+    NewEntry = true;
     for OutIndex=1:numel(Out)
         OutNow = Out{OutIndex};
         if (InNow.SystemSize==OutNow.SystemSize)&&(InNow.MeasurementProbability==OutNow.MeasurementProbability)&&(InNow.InteractingProbability==OutNow.InteractingProbability)&&(InNow.TotalTimeSteps==OutNow.TotalTimeSteps)
             % combine entries
-            Out{OutIndex}.LengthDistribution = cat(2,OutNow.LengthDistribution,InNow.LengthDistribution);
-            Out{OutIndex}.SubsystemEntropy = cat(2,OutNow.SubsystemEntropy,InNow.SubsystemEntropy);
-            Out{OutIndex}.PurificationEntropy = cat(2,OutNow.PurificationEntropy,InNow.PurificationEntropy);
-            Out{OutIndex}.Realizations = cat(2,OutNow.Realizations,InNow.Realizations);
+            Out{OutIndex}.LengthDistribution = cat(1,OutNow.LengthDistribution,InNow.LengthDistribution);
+            Out{OutIndex}.SubsystemEntropy = cat(1,OutNow.SubsystemEntropy,InNow.SubsystemEntropy);
+            Out{OutIndex}.PurificationEntropy = cat(1,OutNow.PurificationEntropy,InNow.PurificationEntropy);
+            Out{OutIndex}.Realizations = cat(1,OutNow.Realizations,InNow.Realizations);
+            NewEntry = false;
             break
         end
+    end
+
+    if NewEntry
+        Out = cat(2,Out,InNow);
     end
     
 end

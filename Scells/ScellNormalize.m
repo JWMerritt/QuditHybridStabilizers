@@ -2,13 +2,13 @@ function Out = ScellNormalize(In,ArgsX,ArgsY,DoOrder)
 %   Normalizes the Scell - orders it, and combines duplicates. 'In' is a Scell, and 'Args' are cells of field names for the structs in the Scell. 'ArgsX' are the independent arguments which we order by. 'ArgsY' are the dependent arguments that get ordered.
 %   In is expected to be a Scell - a cell of structs, each struct having one index value and multiple fields.
 
-if nargs<3
+if nargin<3
     ArgsX = {'SystemSize','MeasurementProbability','InteractingProbability','TotalTimeSteps'}
     ArgsY = {'Realizations','LengthDistribution','SubsystemEntropy','PurificationEntropy'};
 end
 ArgsAll = cat(1,ArgsX,ArgsY);
 
-if nargs<4
+if nargin<4
     DoOrder = true;
 end
 
@@ -28,7 +28,7 @@ for ii=1:numel(ArgsAll)
 end
 
 
-Mid = In{ii};
+Mid = In{1};
 
 for InIndex = 2:numel(In)
     EntryEqual_Counter = true; %    just to initialize this variable.
@@ -71,6 +71,9 @@ end
 
 if DoOrder
 
+    Out = ScellOrder(Mid);
+
+    %{
     AllEntriesX = struct();
     for ii=1:numel(ArgsX)
         AllEntriesX = setfield(AllEntriesX,ArgsX{ii},[]);
@@ -116,6 +119,7 @@ if DoOrder
     end
     end
     end
+    %}
 
 end
 

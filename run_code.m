@@ -129,18 +129,22 @@ fprintf('\n%s\n',DATA_LoadString)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %                   No longer directory dependent!
 if nargin<4
-	RunLocation = "Lenovo_Yoga"
+	RunLocation = "Lenovo_Yoga";
 	RC = false;
 	Verbose = true;
 end
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+fprintf('\nRunLocation = %s\n',RunLocation);
+
 switch RunLocation
 	case "klone_hyak"
 		addpath(genpath('/mmsf1/home/jm117/MATLAB/Parafermions'));
 	case "Lenovo_Yoga"
 		addpath(genpath('C:\Users\jmerr\Documents\MATLAB\ParafermionComponents'));
+	case "ASRock_Desktop"
+		addpath(genpath('D:\Users Things\Documents\MATLAB\Parafermions'));
 	otherwise
 		fprintf("Invalid RunLocation. Update run_code() parameters.\n")
 		return
@@ -1744,5 +1748,7 @@ end
 	better. Requires less of me remembering what each variable is.
 25/Feb/2023 - It seems to be working well enough. Gonna dump this onto klone and
 	hope for the best!
+03/March/2023 - Fixed a major error in the code, in which I never clipped the state
+	before finding the bigrams...
 	
 %}

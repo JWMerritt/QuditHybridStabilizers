@@ -30,7 +30,9 @@ Diary_Fullname_Fullpath = cat(2,Diary_Name_Fullpath,'.diary')
 
 while ~isequal(RunJob.Tasks(1).State,'finished')
     pause(30)
-    delete(Diary_Fullname_Fullpath);
+    if isfile(Diary_Fullname_Fullpath)
+        delete(Diary_Fullname_Fullpath);
+    end
     diary(RunJob,Diary_Fullname_Fullpath);
 end
 

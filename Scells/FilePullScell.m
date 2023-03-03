@@ -32,6 +32,8 @@ C = textscan(FileID,'%s');
 Names = C{1};
 fprintf('\nNames collected...')
 
+fprintf('\nFiles Directory: %s',RelDir)
+
 Scell = {};
 failures = {};
 successes = {};
@@ -40,13 +42,13 @@ BKUP = {};
 for ii=1:numel(Names)
 	if Names{ii}(1)~='#' %this allows us to `comment' out a name by putting a `#' in front of it in the Files-file.
         if exist(cat(2,RelDir,Names{ii},'.mat'),'file')~=2
-            fprintf('\n >> %s Does not exist.',Names{ii})
+            fprintf('\n >> %s.mat Does not exist.',Names{ii})
                 % if the file doesn't exist, the code that tries to find
                 % the filesize will throw an error
         else
             loadTries = 0;
             scellTries = 0;
-            bts = dir(cat(2,RelDir,Names{ii},'.mat')).bytes; % 'dir' is more persinickity, and needs the folder directory
+            bts = dir(cat(2,RelDir,Names{ii},'.mat')).bytes; % 'dir' is more persnickety, and needs the folder directory
             fprintf('\n  %s  [ %.1f Kb ] ... ',Names{ii},bts/1000)
             while loadTries<4
                 try
@@ -71,8 +73,11 @@ for ii=1:numel(Names)
                                     if jj==1
                                         successes{numel(successes)+1} = Names{ii};
                                     end
-                                catch
-                                    fprintf('failed to Scellerize...')
+                                catch ScellFail
+                                    fprintf('\nfailed to Scellerize...')
+                                    fprintf('\n  ~~  %s',ScellFail.identifier)
+                                    fprintf('\n  ~~  "%s"',ScellFail.message)
+                                    fprintf('\n 	Trying again...')
                                     scellTries = scellTries + 1;
                                     pause(0.5)
                                     if scellTries>=4	% we failed to pull the data... try the first backup, later
@@ -127,9 +132,12 @@ for ii=1:numel(BKUP)
 					end
 					successes{numel(successes)+1} = BKname;
 					BKUPsucc{numel(BKUPsucc)+1} = BKname;
-				catch
+				catch ScellFail
+                    fprintf('\n  %s failed to Scellerize.',cat(2,BKUP{ii},'__BKUP_A'))
+                    fprintf('\n  ~~  %s',ScellFail.identifier)
+                    fprintf('\n  ~~  "%s"',ScellFail.message)
+                    fprintf('\n 	Trying again...')
 					failures{numel(failures)+1}=BKUP{ii};
-					fprintf('\n    %s failed to Scellerize.',cat(2,BKUP{ii},'__BKUP_A'))
 				end
 			end
 		end
