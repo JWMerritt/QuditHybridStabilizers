@@ -8,7 +8,7 @@ if NumRows==0
     return % The state is completely mixed.
 end
 
-Lengths = Bigrams_(:,2) - Bigrams_(:,1);
+Lengths = ceil((Bigrams_(:,2) - Bigrams_(:,1))/2);
 
 for ii=1:SystemSize
     Out(ii) = sum(Lengths==ii);

@@ -1,12 +1,13 @@
-function [N,p,q,t,Out,reals,sig,roughLimits] = ScellPullData(Scell,arg,roughLimit)
+function [SystemSizeValues,MeasurementProbabilityValues,InteractingProbabilityValues,TotalTimeSteps,Out,Realizations,sig,roughLimits] = ScellPullData(Scell,arg,roughLimit)
 %sig is std deviation; roughLimits is the number of times data was thrown due to being over the roughLimit
 
-if nargin<=2
+if nargin<3
 	roughLimit = inf;
-	if nargin<=1
-		arg = 'S';
-	end
 end
+if nargin<2
+    arg = 'LengthDistribution';
+end
+
 
 
 if ~iscell(Scell)
@@ -18,44 +19,74 @@ if ~iscell(Scell)
     end
 end
 
-N=[];
-p=[];
-q=[];
-t=[];
-Out=[];
+SystemSizeValues=[];
+MeasurementProbabilityValues=[];
+InteractingProbabilityValues=[];
+TotalTimeSteps=[];
+Out={};
 sig=[];
-reals=[];
+Realizations=[];
 roughLimits = [];
 
 
-for ii=1:numel(Scell)
-    eval(['Current = Scell{ii}.',arg,';'])   %should give us the cell array we're looking for
-    N(ii)=Scell{ii}.N;
-    p(ii)=Scell{ii}.p;
-    q(ii)=Scell{ii}.q;
-    t(ii)=Scell{ii}.t;
+
+for IterativeScellEntryIndex=1:numel(Scell)
+
+    CurrentArgEntries = getfield(Scell{IterativeScellEntryIndex},arg);   %should give us the cell array we're looking for
+    %   This will be a single value in the case of PurificationEntropy, and a column matrix for LengthDistribution / SubsystemEntropy
+
+    SystemSizeValues(IterativeScellEntryIndex)=Scell{IterativeScellEntryIndex}.SystemSize;
+    MeasurementProbabilityValues(IterativeScellEntryIndex)=Scell{IterativeScellEntryIndex}.MeasurementProbability;
+    InteractingProbabilityValues(IterativeScellEntryIndex)=Scell{IterativeScellEntryIndex}.InteractingProbability;
+    TotalTimeSteps(IterativeScellEntryIndex)=Scell{IterativeScellEntryIndex}.TotalTimeSteps;
+
+
+    %{
     holdReals = 0;
     holdArg = 0;
     entries = numel(Current); 	%note: replace this loop with cell2mat() & sum() in the future...
+
     for jj=1:entries
         holdArg(jj) = Current{jj};
-        if numel(Scell{ii}.reals)~=0
-            holdReals(jj) = Scell{ii}.reals{jj};
+        if numel(Scell{ii}.Realizations)~=0
+            holdReals(jj) = Scell{ii}.Realizations{jj};
         end
     end
-	keptOnes = holdArg<roughLimit;
-	finalArg = holdArg(keptOnes);
-	finalReals = holdReals(keptOnes);
-	roughLimits(ii) = entries - sum(keptOnes);
-    Out(ii) = sum(finalArg)/numel(finalArg);
-    if numel(Scell{ii}.reals)~=0
-        reals(ii) = sum(finalReals);
+
+        % RoughLimit code: keep only the values below roughLimit
+    keptOnes = holdArg<roughLimit;
+    finalArg = holdArg(keptOnes);
+    finalReals = holdReals(keptOnes);
+    roughLimits(ii) = entries - sum(keptOnes);
+    %}
+
+    Number_Args_Current = numel(CurrentArgEntries);
+    Realizations(IterativeScellEntryIndex) = Number_Args_Current;
+    ArgOutCurrent = CurrentArgEntries{1};
+    %Realizations_Counter = Scell{IterativeScellEntryIndex}.Realizations{1};
+
+    for IterativeArgEntryIndex=2:Number_Args_Current
+        ArgOutCurrent = ArgOutCurrent + CurrentArgEntries{IterativeArgEntryIndex};
+        %   We force all Realizations=1 so that we can do the variance calculation.
+    end
+
+    FinalArgOut = ArgOutCurrent/Number_Args_Current;
+    Out{IterativeScellEntryIndex} = FinalArgOut;
+
+    %{
+    if numel(Scell{IterativeScellEntryIndex}.Realizations)~=0
+        Realizations(IterativeScellEntryIndex) = sum(finalReals);
     end
     holdVar = [];
-    for jj=1:numel(finalArg)
-        holdVar(jj) = (Out(ii)-finalArg(jj))^2;
+    %}
+    
+    VarianceBuffer = (FinalArgOut - CurrentArgEntries{1});
+    for jj=2:Number_Args_Current
+        VarianceBuffer = VarianceBuffer + (FinalArgOut - CurrentArgEntries{jj}).^2;
     end
-    sig(ii) = sqrt(sum(holdVar)/(numel(finalArg)-1));        
+    sig = sqrt(VarianceBuffer/(Number_Args_Current-1));
+
+
 end
 
 end

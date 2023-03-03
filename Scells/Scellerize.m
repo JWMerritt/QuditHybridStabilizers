@@ -1,6 +1,64 @@
 function Out = Scellerize(In)
 %changes Struct into a cell array, with a struct for each phase point.
 
+EntryStruct = struct('SystemSize',[],'MeasurementProbability',[],'InteractingProbability',[],'TotalTimeSteps',[],'LengthDistribution',cell(1),'SubsystemEntropy',cell(1),'PurificationEntropy',cell(1),'Realizations',cell(1));
+Out = {};
+skip = false;
+
+for ii=1:numel(In)
+    skip = false;
+        %now, we check if In(ii) actually has any data
+    if numel(In(ii).SystemSize)==0
+        skip = true;
+    end
+    if ~isequal(class(In(ii).SubsystemEntropy),'cell')  %mostly here in case ns=[] instead of ns={[]}
+        skip = true;
+    elseif numel(In(ii).SubsystemEntropy{1})==0
+        skip = true;
+    end
+    if isfield(In,'LengthDistribution')
+        if ~isequal(class(In(ii).LengthDistribution),'cell')
+            skip = true;
+        elseif numel(In(ii).LengthDistribution{1})==0
+            skip = true;
+        end
+    end
+    if ~skip        %just place entries into the cell, no duplicate-checking
+        Out{numel(Out)+1} = EntryStruct;
+        Os = numel(Out);
+        Out{Os}.SystemSize = In(ii).SystemSize;
+        Out{Os}.MeasurementProbability = In(ii).MeasurementProbability;
+        Out{Os}.InteractingProbability = In(ii).InteractingProbability;
+        Out{Os}.SubsystemEntropy = In(ii).SubsystemEntropy;
+        if isfield(In,'TotalTimeSteps')
+            Out{Os}.TotalTimeSteps = In(ii).TotalTimeSteps;
+        else
+            Out{Os}.TotalTimeSteps = [];
+        end
+        if isfield(In,'LengthDistribution')
+            Out{Os}.LengthDistribution = In(ii).LengthDistribution;
+        else
+            Out{Os}.LengthDistribution = {};
+        end
+        if isfield(In,'PurificationEntropy')
+            Out{Os}.PurificationEntropy = In(ii).PurificationEntropy;
+        else
+            Out{Os}.PurificationEntropy = {};
+        end
+        if isfield(In,'Realizations')
+            Out{Os}.Realizations = In(ii).Realizations;
+        else
+            Out{Os}.Realizations = {};
+        end
+    end
+end
+
+
+
+%{
+
+%%%% OLD_DATA
+
 EntryStruct = struct('N',[],'p',[],'q',[],'t',[],'S',cell(1),'ns',cell(1),'reals',cell(1));
 Out = {};
 skip = false;
@@ -47,5 +105,6 @@ for i=1:numel(In)
         end
     end
 end
+%}
 
 end

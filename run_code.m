@@ -1744,5 +1744,7 @@ end
 	better. Requires less of me remembering what each variable is.
 25/Feb/2023 - It seems to be working well enough. Gonna dump this onto klone and
 	hope for the best!
+03/March/2023 - Fixed a major error in the code, in which I never clipped the state
+	before finding the bigrams...
 	
 %}
