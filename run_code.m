@@ -1020,7 +1020,7 @@ function Completed = MainCode
 									currentsize = size(Current_State);
 									%fprintf('\nsumsum of current state: %d, size: [%d, %d], generators: %d', sum(sum(abs(Current_State))),currentsize(1),currentsize(2),par_NumGenerators)
 
-									par_Bigram = Bigrams(Current_State,par_NumGenerators)
+									par_Bigram = Bigrams(Clip(Current_State,Hdim,IsPure),par_NumGenerators)
 									currentsize = size(par_Bigram)
 									%fprintf(', bigram size: [%d, %d]',currentsize(1),currentsize(2))
 
@@ -1275,7 +1275,7 @@ function Completed = MainCode
 
 						%if Verbose; fprintf('\n 	VV: StateArray{%d}.Number_Generators = %d',Realizations_Index,StateArray{Realizations_Index}.Number_Generators); end
 							
-						TempBigrams = Bigrams(StateArray{Realizations_Index}.State,StateArray{Realizations_Index}.Number_Generators);
+						TempBigrams = Bigrams(Clip(StateArray{Realizations_Index}.State,Hdim,IsPure),StateArray{Realizations_Index}.Number_Generators);
 						TempLengthDist{Realizations_Index} = LengthDistribution(TempBigrams,SystemSizeValues(SystemSize_Index));
 						TempS{Realizations_Index} = EntropyOfAllRegionSizes(TempBigrams,SystemSizeValues(SystemSize_Index));
 						TempMixedS{Realizations_Index} = SystemSizeValues(SystemSize_Index) - StateArray{Realizations_Index}.Number_Generators;
