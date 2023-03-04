@@ -24,14 +24,14 @@ end
 
 LessThanFlag = false;
 
-if sum(Lengths)<SystemSize
+if sum(Out)<SystemSize
     LessThanFlag = true;
     if GiveWarning
         fprintf('\nWarning: Total number of entries in LengthDistribution is less than system size.\n')
     end
-elseif sum(Lengths)>SystemSize
+elseif sum(Out)>SystemSize
     LessThanFlag = true;
-    fprinft('\nWARNING: Total number of entries in LengthDistribution is MORE than system size!?\n')
+    fprintf('\nWARNING: Total number of entries in LengthDistribution is MORE than system size!?\n')
 end
 
 
