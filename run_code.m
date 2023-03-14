@@ -722,7 +722,671 @@ BKUP_InfoString = '';
 while ~Complete
 
 	try
-		Complete = MainCode;
+		
+
+
+
+				%{	
+		pseudocode:
+			While we still have some N values to do:
+
+				Run circuits until we hit the limit for that N value (RealizationsPerSystemSize(N_i)).
+				Each circuit includes one (or more) realizations for each value of p and q for that N value.
+					The number of realizations per circuit is (RealizationsBeforeSaving).
+
+				While we have circuits / realizations left to complete:
+					Get our current state for a realization.
+					While we still have operations to do on the state (matTime<NVal):
+						Run the parallelized time evol code for RealizationsBeforeSaving steps,
+						or a number of full realzations if subPeriod<0.
+						Then, save our progress to the CKPT file.
+				When we have some completed realizations, calculate the entropies, and save it to the Data file.
+
+				When we hit the RunLimit of circuits for that N value, move to the next N value
+			
+			When we run out of N values, exit the program successfully.
+			
+			donefile.m should put a flag up to stop queueing the job.
+		
+
+		%}
+		Completed = false;
+		
+
+		while SystemSize_Index<=Number_SystemSizes
+		%	We complete a System Size before moving on to the next.
+
+		
+			fprintf('\nSystem Size = %d',SystemSizeValues(SystemSize_Index));
+			if Verbose; fprintf('\n VV: System Size Index = %d',SystemSize_Index); end
+			
+
+			%   S_Metric calculation, based on StatisticsType
+			if isfield(RunOptions,'StatisticsType')
+				if isequal(getfield(RunOptions,'StatisticsType'),'Fermionic')
+					S_Metric = SMetric(SystemSizeValues(SystemSize_Index));
+				elseif isequal(getfield(RunOptions,'StatisticsType'),'Bosonic')
+					S_Metric = SMetricBoson(SystemSizeValues(SystemSize_Index));
+				end
+			else    % Defaults to fermions.
+				S_Metric = SMetric(SystemSizeValues(SystemSize_Index));
+			end
+
+
+			StateArrayEmptyCounter = 0; 	% we will also reset this to zero after each full circuit
+
+
+			while RealizationsPerSystemSize_Counter <= RealizationsPerSystemSize(SystemSize_Index)
+				%	The point-loop. We'll iterate over this loop after every successful realization save.
+				%	$circuits will only increase after we've gone over all (p,q) values, but we'll come back here after each realization.
+				%   circuits will come from the save data
+				if Verbose; fprintf('\n VV: Top of the ''circuits'' loop. Beginning realization code.'); end
+				
+				
+				if RealizationsBeforeSaving(SystemSize_Index)<0
+						%	if so, then we'll be doing multiple realizations per run, so
+						%	we don't worry about saving or overwriting states here, and
+						%	we'll reset the stateArray every time.
+
+					if Verbose; fprintf('\n VV: Initializing stateArray as empty.'); end
+					
+					InitializeState = false;
+					% 	note this doesn't really matter, as we'll never make it to
+					%	the other case as long as subPeriod<0
+					
+					
+					StateArray = cell(Number_ParallelRealizations,1);
+					StateArray_Coded = {};
+					SaveData(CKPT_Name_Fullpath,{CKPT_UsedVariables{:},'-v7.3'},true,'CKPT');
+
+				elseif InitializeState
+
+					if Verbose; fprintf('\n VV: Initializing TrivState'); end
+
+					if IsPure
+						if Verbose; fprintf(' for IsPure == true ( TrivState() ).'); end
+						StartState = TrivState(SystemSizeValues(SystemSize_Index));
+						Number_Generators = SystemSizeValues(SystemSize_Index);
+					else
+						if Verbose; fprintf(' for IsPure == false ( Zeros state ).'); end
+						StartState = zeros(SystemSizeValues(SystemSize_Index),2*SystemSizeValues(SystemSize_Index));
+						Number_Generators = 0;
+					end
+					
+					StateArray = cell(Number_ParallelRealizations,1);
+					if Verbose; fprintf('.. Initializing StateArray'); end
+					for ii=1:Number_ParallelRealizations
+						StateArray{ii} = struct('State',StartState,'Number_Generators',Number_Generators);
+					end
+					
+					EncodeStateArray();
+					SaveData(CKPT_Name_Fullpath,{CKPT_UsedVariables{:},'-v7.3'},true,'CKPT');
+					InitializeState = false;
+
+				end
+				
+				c = clock;
+				try         %   this is for when the corresponding entry of Out hasn't been initialized yet...
+					currentReals = numel(Out(SystemSize_Index,MeasurementProbability_Index,InteractingProbability_Index).Realizations);
+				catch
+					currentReals = 0;
+				end
+				
+				
+						%%%%%%%%%%%%%%%%%%%%%%%%		%%%%%%%%%%%%%
+				fprintf('\n  Running circuit %d / %d, (%d Realization entries),\n    MeasurementProbability = %.3f,\n    InteractingProbability = %.3f,\n  current time: %.2d:%.2d...\n',RealizationsPerSystemSize_Counter,RealizationsPerSystemSize(SystemSize_Index),currentReals,MeasurementProbabilityValues(MeasurementProbability_Index),InteractingProbabilityValues(InteractingProbability_Index),c(4),c(5));
+				if Verbose; fprintf(' VV: (MeasurementProbability_Index,InteractingProbability_Index) = (%d,%d) VV ',MeasurementProbability_Index,InteractingProbability_Index); end 	%keep the trailing VV in this one.
+						%%%%%%%%%%%%%%%%%%%%%%%%		%%%%%%%%%%%%%
+				
+				
+				%                       Here's the meat:
+				
+				
+				while TimeSteps_CurrentState < TotalTimeSteps(SystemSize_Index) 	% This is the loop that calculates the realization(s). We'll usually get killed in the middle of this while loop.                       
+					%shoud be "less than" here, since it should jump to the N in intervals of 100 or so, based on subPeriod
+					%  when matTime equals NVals, then we have done a number of time steps equal to the system size,
+					%  and should not do any more time steps; correspondingly, this loop will not run, since matTime ~< NVals.
+
+					
+					%       All the below self-declarations and stuff are necessary to get  
+					%       the parfor loop to use these variables. Something weird with ckpt, idk.
+
+					%{
+
+					subPeriod = subPeriod;
+					NVals = NVals; PVals = PVals; QVals = QVals; t=t;
+					parP = PVals(p_i); parQ = QVals{p_i}(q_i);
+					N_i = N_i; p_i = p_i; q_i = q_i;
+					UnitaryFunc = UnitaryFunc; EvolFunc = EvolFunc;
+					matTime = matTime;
+					stateArray = stateArray;
+					tempArray = stateArray;
+					N = NVals(N_i);
+					sP = subPeriod(N_i);
+					updateAttachedFiles(RunPool);
+					bkuptic = tic;
+
+					%}
+
+					RealizationsBeforeSaving = RealizationsBeforeSaving;
+
+					SystemSizeValues = SystemSizeValues;
+					MeasurementProbabilityValues = MeasurementProbabilityValues;
+					InteractingProbabilityValues = InteractingProbabilityValues;
+
+					par_MeasurementProbability = MeasurementProbabilityValues(MeasurementProbability_Index);
+					par_InteractingProbability = InteractingProbabilityValues(InteractingProbability_Index);
+					par_SystemSize = SystemSizeValues(SystemSize_Index);
+					par_TotalTimeSteps = TotalTimeSteps(SystemSize_Index);
+					par_RealizationsBeforeSaving = RealizationsBeforeSaving(SystemSize_Index);
+
+					UnitaryFunc = UnitaryFunc;
+					EvolFunc = EvolFunc;
+					S_Metric = S_Metric;
+
+					RunOptions.MeasurementProbability = par_MeasurementProbability;
+					RunOptions.InteractingProbability = par_InteractingProbability;
+
+					TimeSteps_CurrentState = TimeSteps_CurrentState;
+					StateArray = StateArray;
+					TempArray = StateArray;
+
+					BKUP_tic = tic;
+
+					%{
+					updateAttachedFiles(RunPool)
+					listAutoAttachedFiles(RunPool)
+
+					RunPool.AttachedFiles
+
+					FILES = dir('/mmfs1/home/jm117/MATLAB/Parafermions/ParafermionComponents/**/*.m');
+					for ii=1:numel(FILES)
+						FILES_FULL{ii} = cat(2,FILES(ii).folder,'/',FILES(ii).name);
+					end
+					addAttachedFiles(RunPool,FILES_FULL)
+					updateAttachedFiles(RunPool)
+					RunPool.AttachedFiles
+					%}
+					
+		%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+			%	The Parallel Loop
+		%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+					
+					Has_Not_Been_Enough_Time = true; 	% Used whenever we complete a realization, but there's too much time left
+					if Verbose; fprintf('\n VV: starting Has_Not_Been_Enough_Time loop...'); end
+
+					while Has_Not_Been_Enough_Time
+
+						%if Verbose; fprintf('parfor loop...'); end
+
+						try
+							parfor par_Core_Index=1:Number_ParallelRealizations	%split the load among the cores
+
+								%if Verbose; fprintf('\n	VV:	PP>> [%d] Entered parfor loop',par_Core_Index); end;
+								%	it's *too* verbose! Clogs up the log files...
+								k = clock;
+								seed = par_Core_Index+k(6)*10000;
+								rng(seed);
+
+								if par_RealizationsBeforeSaving>0
+									%if Verbose; fprintf('\n	VV:	PP>> [%d] par_Reals > 0',par_Core_Index); end
+
+									localTemp = StateArray{par_Core_Index};	% the parfor loop never modifies stateArray directly
+									for jj=1:min(par_RealizationsBeforeSaving, par_TotalTimeSteps-TimeSteps_CurrentState)	% for if subPeriod does't evenly divide the total time step number
+										% apply time step subPeriod number of times:
+										[localTemp.State,localTemp.Number_Generators] = EvolFunc(localTemp.State,localTemp.Number_Generators,C_Numbers_Int,Hdim,UnitaryFunc,RunOptions,S_Metric);
+										%	Psi,NumGenerators,C_Numbers_Int,Hdim,UnitaryFunc,RunOptions,S_Metric
+									end
+
+								else % sP<0
+									% run multiple times
+									%if Verbose; fprintf('\n	VV:	PP>> [%d] par_Reals < 0',par_Core_Index); end
+
+									localTemp = {}
+									for kk = 1:abs(par_RealizationsBeforeSaving)
+
+										if IsPure
+											Current_State = TrivState(par_SystemSize);
+											par_NumGenerators = par_SystemSize;
+										else
+											Current_State = zeros(par_SystemSize,2*par_SystemSize);
+											par_NumGenerators = 0;
+										end
+
+										for jj=1:par_TotalTimeSteps
+											[Current_State,par_NumGenerators] = EvolFunc(Current_State,par_NumGenerators,C_Numbers_Int,Hdim,UnitaryFunc,RunOptions,S_Metric);
+											%fprintf('\nCore: %d, timestep: %d',par_Core_Index,jj)
+										end
+
+										currentsize = size(Current_State);
+										%fprintf('\nsumsum of current state: %d, size: [%d, %d], generators: %d', sum(sum(abs(Current_State))),currentsize(1),currentsize(2),par_NumGenerators)
+
+										par_Bigram = Bigrams(Clip(Current_State,Hdim,IsPure),par_NumGenerators)
+										currentsize = size(par_Bigram)
+										%fprintf(', bigram size: [%d, %d]',currentsize(1),currentsize(2))
+
+										%fprintf('\n [%d, ] \n',par_Bigram(1,1))
+										localTemp{kk,1} = LengthDistribution(par_Bigram,par_SystemSize);		% Length Distributions
+										localTemp{kk,2} = EntropyOfAllRegionSizes(par_Bigram,par_SystemSize);	% Subsystem entropy
+										localTemp{kk,3} = par_SystemSize - par_NumGenerators;					% Purification entropy
+
+									end
+
+								end
+
+								%                   End calculation.
+								TempArray{par_Core_Index} = localTemp;
+
+							end		% end parfor loop
+
+						catch ParforError
+							fprintf('\n >>: %s: ERROR in parfor loop.',SelfName)
+							fprintf('\n  ~~  %s',ParforError.identifier)
+							fprintf('\n  ~~  "%s"',ParforError.message)
+							fprintf('\n >>: Full error stack:\n')
+							PrintStack(ParforError)
+							error(ParforError)
+						end
+						
+						StateArray = TempArray;
+						if RealizationsBeforeSaving(SystemSize_Index)>0
+							TimeSteps_CurrentState = TimeSteps_CurrentState + RealizationsBeforeSaving(SystemSize_Index);
+								%if we did less than subPeriod, that's okay, since this 
+								%will still put matTime over N and not restart the loop
+						else
+							TimeSteps_CurrentState = SystemSizeValues(SystemSize_Index);
+						end
+						
+						%{
+						if it's been less than 5 min, run again. Add more time steps to the realization.
+						That is, unless there's no time steps remaining to calculate, and we need to save.
+						Then just wait a minute to prevent over-saving issues, then proceed.
+						While it would be nice to put the time check inside the parfor loop to reduce overhead,
+						it allows the possibility for the realizations to get out of sync, time-wise, which we
+						can't deal with.
+						We could also write this better, and have the `subPeriod<0' jobs run more realizations,
+						But it's more complicated that it seems. This is only a just-in-case thing; set up the times better!
+						%}
+						
+						BKUP_tic_Limit = 10;
+						%	Number in seconds before going on to make a backup
+
+						if toc(BKUP_tic)<BKUP_tic_Limit
+							fprintf(' -@ %d/%d @- ',toc(BKUP_tic),BKUP_tic_Limit)
+							Has_Not_Been_Enough_Time = true;
+							if TimeSteps_CurrentState >= TotalTimeSteps(SystemSize_Index)
+								Has_Not_Been_Enough_Time = false;
+								pause(60)
+							end
+						else
+							Has_Not_Been_Enough_Time = false;
+						end
+						TimeBeforeMakingBKUP_Counter = TimeBeforeMakingBKUP_Counter + toc(BKUP_tic);
+						
+					end	% end of <while Has_Not_Been_Enough_Time>
+
+					EncodeStateArray()
+					%	Outside of initializing the states, the parfor loop is the only time that StateArray is changed.
+					
+					if Verbose; fprintf('\n VV: Has_Not_Been_Enough_Time/parfor loop(s) completed.'); end
+					
+		%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+			%	Saving Code
+		%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+					
+					StateArrayEmpty = false;
+
+					%{
+					for ii=1:numel(stateArray)
+						if numel(stateArray{ii})==0
+							fprintf('\n >>: ERROR. stateArray entry empty after parfor loop.\n >>: Restarting the realization (restarting MainCode)...')
+							initializeState = true;
+							matTime = 0; 	%	(these two variabels are global, so this is relevant.)
+							ErStr = struct('message','stateArray empty following parfor loop.','identifier','run_code_gen:stateArrayEmpty')
+							error(ErStr)
+						end
+					end
+					%}
+					%	I'm not sure yet if there's a corresponding problem in the parafermion code...
+					
+					c = clock;
+					fprintf('\n     Completed %d timesteps.... %.2d/%.2d, %.2d:%.2d  ',TimeSteps_CurrentState,c(2),c(3),c(4),c(5))
+						%    We'll just save all the data again and overwrite the old file. This helps us plug whatever leak
+						%    Matlab has when using '-append' like we do. Besides, the whole file's datasize is in the array
+						%    anyways, so it's not like it will take much more time than just saving the array...
+
+					saveSuccess = false;
+					trialCounter = 0;
+
+					%SaveData(ckptNameFull,cat(2,'''-v7.3'',',ckptDataString),true,'CKPT');
+					%	StateArray already Encoded after parfor loop.
+					SaveData(CKPT_Name_Fullpath,{CKPT_UsedVariables{:},'-v7.3'},true,'CKPT');
+
+					if TimeBeforeMakingBKUP_Counter >= TimeBeforeMakingBKUP 	%cycle the backup saves
+
+						if Verbose; fprintf('\n VV: Backup counter met. Backup saves:'); end
+
+						c2 = clock;
+
+						BKUP_InfoString = sprintf('Backup %.2d, made %.4d/%.2d/%.2d, %.2d:%.2d',CurrentNumber_TimesBackedUp+1,c2(1),c2(2),c2(3),c2(4),c2(5));
+						saveSuccess = false;
+						trialCounter = 0;
+						
+						%	This whole set of loops is for cycling the DATA_BKUP_# files
+
+						while (~saveSuccess) && (trialCounter<20) && isequal(exist(cat(2,DATA_Name_Fullpath,'__BKUP_B.mat'),'file'),2)
+
+							if Verbose; fprintf('\n   vv: B->C...'); end
+
+							try
+								saveSuccess = copyfile(cat(2,DATA_Name_Fullpath,'__BKUP_B.mat'),cat(2,DATA_Name_Fullpath,'__BKUP_C.mat'));
+								%	Note that the DATA_Name_BKUP_B name is already saved... but whatever
+								trialCounter = 0;
+								if Verbose; fprintf(' C Done.'); end
+							catch BCError
+								fprintf('\nERROR with backup B->C.')
+								fprintf('\n  ~~  %s',BCError.identifier)
+								fprintf('\n  ~~  "%s"',BCError.message)
+								fprintf('\n    Retrying...\n')
+								trialCounter = trialCounter + 1;
+								if Verbose; fprintf('   VV:  trialCounter = %d\n',trialCounter); end
+								pause(10)
+							end
+
+						end
+
+						saveSuccess = false;
+
+						while (~saveSuccess) && (trialCounter<20) && isequal(exist(cat(2,DATA_Name_Fullpath,'__BKUP_A.mat'),'file'),2)
+
+							if Verbose; fprintf('\n   vv: A->B...'); end
+
+							try
+
+								testOpen = load(cat(2,DATA_Name_Fullpath,'__BKUP_A'));
+									if Verbose; fprintf(' BKUP_A loaded successfully...'); end
+								saveSuccess = copyfile(cat(2,DATA_Name_Fullpath,'__BKUP_A.mat'),cat(2,DATA_Name_Fullpath,'__BKUP_B.mat'));
+									if Verbose; fprintf('\n   vv: BKUP_A saved to BKUP_B...'); end
+								testOpen = load(cat(2,DATA_Name_Fullpath,'__BKUP_B'));
+									if Verbose; fprintf(' (New) BKUP_B loaded successfully...'); end
+								trialCounter = 0;
+									if Verbose; fprintf(' B Done.'); end
+
+							catch ABError
+								fprintf('\n\nERROR with backup A->B.')
+								fprintf('\n  ~~  %s',ABError.identifier)
+								fprintf('\n  ~~  "%s"',ABError.message)
+								fprintf('\n    Retrying...\n')
+								trialCounter = trialCounter + 1;
+									if Verbose; fprintf('   VV:  trialCounter = %d\n',trialCounter); end
+								pause(30)
+							end
+
+						end
+
+						saveSuccess = false;
+
+						while (~saveSuccess) && (trialCounter<20)
+
+							if Verbose; fprintf('\n   vv: Data->A...'); end
+
+							try
+								%save(cat(2,DATA_Name_Full,'__BKUP_A'),'Out','JobInformation','CKPT_RunLog','specs','bkupinfo','N_i','p_i','q_i','circuits')
+								%	if Verbose; fprintf('\n   vv: Saved...'); end
+								%testOpen = load(cat(2,DATA_Name_Full,'__BK_A'));
+								%	if Verbose; fprintf(' testOpen success...'); end
+								fprintf('\nBKUP_InfoString = "%s"\n',BKUP_InfoString)
+								saveSuccess = SaveData(cat(2,DATA_Name_Fullpath,'__BKUP_A'),DATA_BKUPVariables,true,'DATA_BKUP_A');
+									if Verbose; fprintf('\n   vv: DATA backed up successfully...'); end
+								trialCounter = 0;
+									if Verbose; fprintf(' A Done.'); end
+							catch AError
+								fprintf('\n\nERROR with backup save A.')
+								fprintf('\n  ~~  %s',AError.identifier)
+								fprintf('\n  ~~  "%s"',AError.message)
+								fprintf('\n    Retrying...\n')
+								trialCounter = trialCounter + 1;
+								if Verbose; fprintf('   VV:  trialCounter = %d\n',trialCounter); end
+								pause(30)
+							end
+
+						end
+
+						if trialCounter>=20
+							fprintf('\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
+							fprintf('\n            MAJOR ERROR SAVING BKUP FILE. RETURNING...')
+							fprintf('\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n')
+							ErStr = struct('message','Major error saving DATA_BKUP file.','identifier',sprintf('%s:DataBkupFailure',SelfName));
+							error(ErStr)
+						end
+
+						%	This is the code for CKPT_BKUP
+
+						saveSuccess = false;
+						trialCounter = 0;
+
+						%	StateArray Encoded before start of BKUP code.
+						SaveData(CKPT_Name_Fullpath_BKUP,{CKPT_UsedVariables{:},'-v7.3'},true,'CKPT_BKUP');
+
+						CurrentNumber_TimesBackedUp = CurrentNumber_TimesBackedUp + 1;
+						TimeBeforeMakingBKUP_Counter = 0;
+
+						if Verbose; fprintf('\n VV: Current nubmer of times backed up = %d  VV',CurrentNumber_TimesBackedUp); end
+
+
+					end
+					
+					if runFresh
+						Number_TimesCalculationsSaved = Number_TimesCalculationsSaved + 1;	%Update now that the program has successfully contributed data
+						if Verbose; fprintf('\n 	VV: Number_TimesCalculationsSaved (# of successes) updated; program has contributed data.\n'); end
+						runFresh = false;
+					end
+					
+				end		%We've now completed this particular realization
+				
+				%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+				%	We now have a completed realization!
+				% 	Now that we have the realization(s), we get the data from it.
+
+				
+				if Verbose; fprintf('\n VV: matTime loop completed.'); end
+				
+				%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+				%	Calculate the quantities of this realization:
+
+				if RealizationsBeforeSaving(SystemSize_Index) > 0			%calculate the entropies
+
+					if Verbose; fprintf('\n VV: Doing entropy calculation...'); end 
+					
+					%	The relevant Out().Argument is a column cell that the following will be appended to:
+					TempS = cell(Number_ParallelRealizations,1);
+					TempLengthDist = TempS;
+					TempMixedS = TempS;
+					TempRealizationCount = TempS;
+
+					StateArrayEmpty = false;
+
+					for Realizations_Index=1:Number_ParallelRealizations      %couldn't think of a more clever way to do this...
+						TempRealizationCount{Realizations_Index}=1;
+					end
+
+					for Realizations_Index=1:Number_ParallelRealizations
+
+						if numel(StateArray{Realizations_Index})~=0
+
+							%if Verbose; fprintf('\n 	VV: StateArray{%d}.Number_Generators = %d',Realizations_Index,StateArray{Realizations_Index}.Number_Generators); end
+								
+							TempBigrams = Bigrams(Clip(StateArray{Realizations_Index}.State,Hdim,IsPure),StateArray{Realizations_Index}.Number_Generators);
+							TempLengthDist{Realizations_Index} = LengthDistribution(TempBigrams,SystemSizeValues(SystemSize_Index));
+							TempS{Realizations_Index} = EntropyOfAllRegionSizes(TempBigrams,SystemSizeValues(SystemSize_Index));
+							TempMixedS{Realizations_Index} = SystemSizeValues(SystemSize_Index) - StateArray{Realizations_Index}.Number_Generators;
+						
+						else
+
+							fprintf('\nBad read on data. StateArray{ii} = {}. Skipping this circuit entry...\n\n')
+							TempS = {};
+							TempLengthDist = {};
+							TempMixedS = {};
+							TempRealizationCount = {};
+							StateArrayEmpty = true;
+							StateArrayEmptyCounter = StateArrayEmptyCounter + 1;
+							break 	%we don't need to reapeat this code $subRealizations times. Just the once will work.
+
+						end
+
+					end
+
+				else % RealizationsPerSystemSize(SystemSize_Index) < )
+
+					if Verbose; fprintf('\n VV: Doing entropy tallies...'); end
+					TempLengthDist = {};
+					TempS = {};
+					TempMixedS = {};
+					RNum = Number_ParallelRealizations*abs(RealizationsBeforeSaving(SystemSize_Index));	 %subRealizations(N_i)*abs(subPeriod(N_i));
+					TempRealizationCount = mat2cell(ones(RNum,1),ones(1,RNum));
+					%	this says to make an RNum x 1 matrix of ones, and split them into a 20 row cell, with one entry per row.
+					%	it gives us an RNum x 1 cell with 1 in each entry, like in the subPeriod>0 case.
+					for Realizations_Index=1:Number_ParallelRealizations
+
+						if numel(StateArray{Realizations_Index})~=0
+							%	StateArray{ii} will be a (Number_ParallelRealizations)-by-3 cell.
+							%	The three entries will be: 
+							%		{kk,1} = Length Distribution
+							%		{kk,2} = Subsystem Entropy
+							%		{kk,3} = Purification Entropy
+							TempLengthDist = cat(1,TempLengthDist,StateArray{Realizations_Index}{:,1});
+							TempS = cat(1,TempS,StateArray{Realizations_Index}{:,2});
+							TempMixedS = cat(1,TempMixedS,StateArray{Realizations_Index}{:,3});
+							StateArrayEmpty = false;
+						else
+							% there are no entries in stateArray. Don't know why this happens sometimes...
+							% It may happen when /home/jm117 doesn't have enough free space to do what's needed...
+							% nonetheless, we cap it at 20 times/circuit, to avoid 8GB Output files, again...
+							
+							fprintf('\nBad read on data. StateArray{ii} = {}. Skipping this circuit entry...\n\n')
+							TempLengthDist = {};
+							TempS = {};
+							TempMixedS = {};
+							TempRealizationCount = {};
+							StateArrayEmpty = true;
+							StateArrayEmptyCounter = StateArrayEmptyCounter + 1;
+							break 	%we don't need to reapeat this code $subRealizations times. Just the once will work.
+
+						end
+
+					end
+
+				end		%We've now tabulated the properties of this realization
+				
+
+				%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+				%	Now that we've calculated the quantities, let's collect the data:
+					
+
+				if ~StateArrayEmpty
+					%{
+					Out(q_i,N_i,p_i).p = PVals(p_i);
+					Out(q_i,N_i,p_i).N = NVals(N_i);
+					Out(q_i,N_i,p_i).q = QVals{p_i}(q_i);
+					Out(q_i,N_i,p_i).t = t;
+					Out(q_i,N_i,p_i).S = cat(1,Out(q_i,N_i,p_i).S,S);
+					Out(q_i,N_i,p_i).ns = cat(1,Out(q_i,N_i,p_i).ns,ns);
+					Out(q_i,N_i,p_i).reals = cat(1,Out(q_i,N_i,p_i).reals,sR);
+					SaveData(DATA_Name_Full,'''Out'',''JobInformation'',''CKPT_RunLog'',''specs''',true,'Data');
+					fprintf('  Completed (N,p,q) = (%d,%.2f,%.2f), circuit %d\n',NVals(N_i),PVals(p_i),QVals{p_i}(q_i),circuits)
+					%}
+
+					Out(SystemSize_Index,MeasurementProbability_Index,InteractingProbability_Index).SystemSize = SystemSizeValues(SystemSize_Index);
+					Out(SystemSize_Index,MeasurementProbability_Index,InteractingProbability_Index).MeasurementProbability = MeasurementProbabilityValues(MeasurementProbability_Index);
+					Out(SystemSize_Index,MeasurementProbability_Index,InteractingProbability_Index).InteractingProbability = InteractingProbabilityValues(InteractingProbability_Index);
+					Out(SystemSize_Index,MeasurementProbability_Index,InteractingProbability_Index).TotalTimeSteps = TotalTimeSteps(SystemSize_Index);
+					Out(SystemSize_Index,MeasurementProbability_Index,InteractingProbability_Index).LengthDistribution = cat(1,Out(SystemSize_Index,MeasurementProbability_Index,InteractingProbability_Index).LengthDistribution,TempLengthDist);
+					Out(SystemSize_Index,MeasurementProbability_Index,InteractingProbability_Index).SubsystemEntropy = cat(1,Out(SystemSize_Index,MeasurementProbability_Index,InteractingProbability_Index).SubsystemEntropy,TempS);
+					Out(SystemSize_Index,MeasurementProbability_Index,InteractingProbability_Index).PurificationEntropy = cat(1,Out(SystemSize_Index,MeasurementProbability_Index,InteractingProbability_Index).PurificationEntropy,TempMixedS);
+					Out(SystemSize_Index,MeasurementProbability_Index,InteractingProbability_Index).Realizations = cat(1,Out(SystemSize_Index,MeasurementProbability_Index,InteractingProbability_Index).Realizations,TempRealizationCount);
+					
+					
+
+						%   Below code replaces the "while p_i" and "while q_i" loops
+						%   so that every point each (p,q) gets one realization per circuit
+
+					InteractingProbability_Index = InteractingProbability_Index + 1;
+
+					if InteractingProbability_Index > Number_InteractingProbabilities
+
+						InteractingProbability_Index = 1;
+						MeasurementProbability_Index = MeasurementProbability_Index + 1;
+
+						if MeasurementProbability_Index > Number_MeasurementProbabilities
+
+							MeasurementProbability_Index = 1;
+							RealizationsPerSystemSize_Counter = RealizationsPerSystemSize_Counter + 1;
+							StateArrayEmptyCounter = 0;
+
+						end
+
+					end
+						%    We'll just save all the data again and overwrite the old file. This helps us plug whatever leak
+						%    Matlab has when using '-append' like we do.
+						%	 -- I'd like to switch this one back to "-append", since we save the entire CKPT data after initializing
+						%		each the stateArray, after each parfor loop, and whenever we do a BKUP save... but I don't know
+						%	 	exactly what variables I should save... -- 27/Nov/2021
+
+						%	Hypothesis: we save the _Index variables here, using -append, so that on the next run, the system knows to do the next point.
+						%	If StateArray is empty, we skip this, and the _Index variables stay the same. 
+						%	The following reset code still goes through, and we just re-run this point.
+					%SaveData(CKPT_Name_Full,CKPT_SaveString,true,'CKPT');
+
+				elseif StateArrayEmptyCounter>=20
+					fprintf('\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
+					fprintf('\n            MAJOR ERROR: stateArray consistently empty. Returning...')
+					fprintf('\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n')
+					ErStr = struct('message','stateArray consistently empty...','identifier',sprintf('%s:stateArrayEempty',SelfName));
+					error(ErStr)
+				end % End of Data collecting if-end statement
+				
+
+				%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+				%	Now that we've collected the data (or not if StateArray was empty),
+				%	Let's save our progress:
+
+				InitializeState = true;
+				TimeSteps_CurrentState = 0;
+				SaveData(DATA_Name_Fullpath,DATA_UsedVariables,true,'DATA');
+				SaveData(CKPT_Name_Fullpath,{CKPT_UsedVariables{:},'-v7.3'},true,'CKPT');
+				
+				if Verbose; fprintf(' VV: circuit run complete. SystemSize_Index = %d, MeasurementProbability_Index = %d, InteractingProbability_Index = %d, RealizationsPerSystemSize_Counter = %d',SystemSize_Index,MeasurementProbability_Index,InteractingProbability_Index,RealizationsPerSystemSize_Counter); end
+				
+			end 	
+
+
+			%   We've finished this N value. On to the next one.
+			if Verbose; fprintf('\n VV: ''circuits'' loop completed.'); end
+
+			RealizationsPerSystemSize_Counter = 1;
+			MeasurementProbability_Index = 1;
+			InteractingProbability_Index = 1;
+			SystemSize_Index = SystemSize_Index + 1;
+
+			InitializeState = true;
+			TimeSteps_CurrentState = 0;
+
+			SaveData(CKPT_Name_Fullpath,{CKPT_UsedVariables{:},'-v7.3'},true,'CKPT')
+			%SaveData(ckptNameFull,'''N_i'',''p_i'',''q_i'',''circuits'',''initializeState'',''matTime'',''-append''',false,'CKPT -append')
+			
+			if Verbose; fprintf(' VV: N value complete. SystemSize_Index = %d, MeasurementProbability_Index = %d, InteractingProbability_Index = %d, RealizationsPerSystemSize_Counter = %d',SystemSize_Index,MeasurementProbability_Index,InteractingProbability_Index,RealizationsPerSystemSize_Counter); end
+		end
+
+		if Verbose; fprintf('\n VV: N_i loop completed.'); end
+		
+		%	If this code is running, then we've gone through all of the NVals, as N_i > Nnum
+		fprintf('\n\n\n      All done??\n\n')
+		
+		Completed = true;
+
+
+
+
 	catch MainFail
 		fprintf('\n >>: Error in executing Main Code:')
 		fprintf('\n ~~ %s',MainFail.identifier)
@@ -777,680 +1441,6 @@ fprintf('\n\n\n      All done!!\n\n')
 
 
 function Completed = MainCode
-	%{	
-	pseudocode:
-		While we still have some N values to do:
-
-			Run circuits until we hit the limit for that N value (RealizationsPerSystemSize(N_i)).
-			Each circuit includes one (or more) realizations for each value of p and q for that N value.
-				The number of realizations per circuit is (RealizationsBeforeSaving).
-
-			While we have circuits / realizations left to complete:
-				Get our current state for a realization.
-				While we still have operations to do on the state (matTime<NVal):
-					Run the parallelized time evol code for RealizationsBeforeSaving steps,
-					or a number of full realzations if subPeriod<0.
-					Then, save our progress to the CKPT file.
-			When we have some completed realizations, calculate the entropies, and save it to the Data file.
-
-			When we hit the RunLimit of circuits for that N value, move to the next N value
-		
-		When we run out of N values, exit the program successfully.
-		
-		donefile.m should put a flag up to stop queueing the job.
-	
-	
-	local variables for this function: (outdated)
-		Completed
-		currentReals
-		N
-		parP
-		parQ
-		sP
-		bkuptic
-		tempArray
-		localTemp
-		Has_Not_Been_Enough_Time
-		c2
-		saveSuccess
-		trialCounter
-		StateArrayEmptyCounter
-		StateArrayEmpty
-		S
-		ns
-		sR
-		RNum
-
-	%}
-	Completed = false;
-	
-
-	while SystemSize_Index<=Number_SystemSizes
-	%	We complete a System Size before moving on to the next.
-
-		fprintf('\nSystem Size = %d',SystemSizeValues(SystemSize_Index));
-		if Verbose; fprintf('\n VV: System Size Index = %d',SystemSize_Index); end
-		
-        %   S_Metric calculation, based on StatisticsType
-        if isfield(RunOptions,'StatisticsType')
-            if isequal(getfield(RunOptions,'StatisticsType'),'Fermionic')
-                S_Metric = SMetric(SystemSizeValues(SystemSize_Index));
-            elseif isequal(getfield(RunOptions,'StatisticsType'),'Bosonic')
-                S_Metric = SMetricBoson(SystemSizeValues(SystemSize_Index));
-            end
-        else    % Defaults to fermions.
-            S_Metric = SMetric(SystemSizeValues(SystemSize_Index));
-        end
-
-		StateArrayEmptyCounter = 0; 	% we will also reset this to zero after each full circuit
-
-		while RealizationsPerSystemSize_Counter <= RealizationsPerSystemSize(SystemSize_Index)
-			%	The point-loop. We'll iterate over this loop after every successful realization save.
-			%	$circuits will only increase after we've gone over all (p,q) values, but we'll come back here after each realization.
-			%   circuits will come from the save data
-			if Verbose; fprintf('\n VV: Top of the ''circuits'' loop. Beginning realization code.'); end
-			
-			
-			if RealizationsBeforeSaving(SystemSize_Index)<0
-					%	if so, then we'll be doing multiple realizations per run, so
-					%	we don't worry about saving or overwriting states here, and
-					%	we'll reset the stateArray every time.
-
-				if Verbose; fprintf('\n VV: Initializing stateArray as empty.'); end
-				
-				InitializeState = false;
-				% 	note this doesn't really matter, as we'll never make it to
-				%	the other case as long as subPeriod<0
-				
-				
-				StateArray = cell(Number_ParallelRealizations,1);
-				StateArray_Coded = {};
-				SaveData(CKPT_Name_Fullpath,{CKPT_UsedVariables{:},'-v7.3'},true,'CKPT');
-
-			elseif InitializeState
-
-				if Verbose; fprintf('\n VV: Initializing TrivState'); end
-
-				if IsPure
-					if Verbose; fprintf(' for IsPure == true ( TrivState() ).'); end
-					StartState = TrivState(SystemSizeValues(SystemSize_Index));
-					Number_Generators = SystemSizeValues(SystemSize_Index);
-				else
-					if Verbose; fprintf(' for IsPure == false ( Zeros state ).'); end
-					StartState = zeros(SystemSizeValues(SystemSize_Index),2*SystemSizeValues(SystemSize_Index));
-					Number_Generators = 0;
-				end
-				
-				StateArray = cell(Number_ParallelRealizations,1);
-				if Verbose; fprintf('.. Initializing StateArray'); end
-				for ii=1:Number_ParallelRealizations
-					StateArray{ii} = struct('State',StartState,'Number_Generators',Number_Generators);
-				end
-				
-				EncodeStateArray();
-				SaveData(CKPT_Name_Fullpath,{CKPT_UsedVariables{:},'-v7.3'},true,'CKPT');
-				InitializeState = false;
-
-			end
-			
-			c = clock;
-			try         %   this is for when the corresponding entry of Out hasn't been initialized yet...
-				currentReals = numel(Out(SystemSize_Index,MeasurementProbability_Index,InteractingProbability_Index).Realizations);
-			catch
-				currentReals = 0;
-			end
-			
-			
-					%%%%%%%%%%%%%%%%%%%%%%%%		%%%%%%%%%%%%%
-			fprintf('\n  Running circuit %d / %d, (%d Realization entries),\n    MeasurementProbability = %.3f,\n    InteractingProbability = %.3f,\n  current time: %.2d:%.2d...\n',RealizationsPerSystemSize_Counter,RealizationsPerSystemSize(SystemSize_Index),currentReals,MeasurementProbabilityValues(MeasurementProbability_Index),InteractingProbabilityValues(InteractingProbability_Index),c(4),c(5));
-			if Verbose; fprintf(' VV: (MeasurementProbability_Index,InteractingProbability_Index) = (%d,%d) VV ',MeasurementProbability_Index,InteractingProbability_Index); end 	%keep the trailing VV in this one.
-					%%%%%%%%%%%%%%%%%%%%%%%%		%%%%%%%%%%%%%
-			
-			
-			%                       Here's the meat:
-			
-			
-			while TimeSteps_CurrentState < TotalTimeSteps(SystemSize_Index) 	% This is the loop that calculates the realization(s). We'll usually get killed in the middle of this while loop.                       
-				%shoud be "less than" here, since it should jump to the N in intervals of 100 or so, based on subPeriod
-				%  when matTime equals NVals, then we have done a number of time steps equal to the system size,
-				%  and should not do any more time steps; correspondingly, this loop will not run, since matTime ~< NVals.
-
-				
-				%       All the below self-declarations and stuff are necessary to get  
-				%       the parfor loop to use these variables. Something weird with ckpt, idk.
-
-				%{
-
-				subPeriod = subPeriod;
-				NVals = NVals; PVals = PVals; QVals = QVals; t=t;
-				parP = PVals(p_i); parQ = QVals{p_i}(q_i);
-				N_i = N_i; p_i = p_i; q_i = q_i;
-				UnitaryFunc = UnitaryFunc; EvolFunc = EvolFunc;
-				matTime = matTime;
-				stateArray = stateArray;
-				tempArray = stateArray;
-				N = NVals(N_i);
-				sP = subPeriod(N_i);
-				updateAttachedFiles(RunPool);
-				bkuptic = tic;
-
-				%}
-
-				RealizationsBeforeSaving = RealizationsBeforeSaving;
-
-				SystemSizeValues = SystemSizeValues;
-				MeasurementProbabilityValues = MeasurementProbabilityValues;
-				InteractingProbabilityValues = InteractingProbabilityValues;
-
-				par_MeasurementProbability = MeasurementProbabilityValues(MeasurementProbability_Index);
-				par_InteractingProbability = InteractingProbabilityValues(InteractingProbability_Index);
-				par_SystemSize = SystemSizeValues(SystemSize_Index);
-				par_TotalTimeSteps = TotalTimeSteps(SystemSize_Index);
-				par_RealizationsBeforeSaving = RealizationsBeforeSaving(SystemSize_Index);
-
-				UnitaryFunc = UnitaryFunc;
-				EvolFunc = EvolFunc;
-				S_Metric = S_Metric;
-
-				RunOptions.MeasurementProbability = par_MeasurementProbability;
-				RunOptions.InteractingProbability = par_InteractingProbability;
-
-				TimeSteps_CurrentState = TimeSteps_CurrentState;
-				StateArray = StateArray;
-				TempArray = StateArray;
-
-				BKUP_tic = tic;
-
-				%{
-				updateAttachedFiles(RunPool)
-				listAutoAttachedFiles(RunPool)
-
-				RunPool.AttachedFiles
-
-				FILES = dir('/mmfs1/home/jm117/MATLAB/Parafermions/ParafermionComponents/**/*.m');
-				for ii=1:numel(FILES)
-					FILES_FULL{ii} = cat(2,FILES(ii).folder,'/',FILES(ii).name);
-				end
-				addAttachedFiles(RunPool,FILES_FULL)
-				updateAttachedFiles(RunPool)
-				RunPool.AttachedFiles
-				%}
-				
-	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-		%	The Parallel Loop
-	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-				
-				Has_Not_Been_Enough_Time = true; 	% Used whenever we complete a realization, but there's too much time left
-				if Verbose; fprintf('\n VV: starting Has_Not_Been_Enough_Time loop...'); end
-
-				while Has_Not_Been_Enough_Time
-
-					%if Verbose; fprintf('parfor loop...'); end
-
-					try
-						parfor par_Core_Index=1:Number_ParallelRealizations	%split the load among the cores
-
-							%if Verbose; fprintf('\n	VV:	PP>> [%d] Entered parfor loop',par_Core_Index); end;
-							%	it's *too* verbose! Clogs up the log files...
-							k = clock;
-							seed = par_Core_Index+k(6)*10000;
-							rng(seed);
-
-							if par_RealizationsBeforeSaving>0
-								%if Verbose; fprintf('\n	VV:	PP>> [%d] par_Reals > 0',par_Core_Index); end
-
-								localTemp = StateArray{par_Core_Index};	% the parfor loop never modifies stateArray directly
-								for jj=1:min(par_RealizationsBeforeSaving, par_TotalTimeSteps-TimeSteps_CurrentState)	% for if subPeriod does't evenly divide the total time step number
-									% apply time step subPeriod number of times:
-									[localTemp.State,localTemp.Number_Generators] = EvolFunc(localTemp.State,localTemp.Number_Generators,C_Numbers_Int,Hdim,UnitaryFunc,RunOptions,S_Metric);
-									%	Psi,NumGenerators,C_Numbers_Int,Hdim,UnitaryFunc,RunOptions,S_Metric
-								end
-
-							else % sP<0
-								% run multiple times
-								%if Verbose; fprintf('\n	VV:	PP>> [%d] par_Reals < 0',par_Core_Index); end
-
-								localTemp = {}
-								for kk = 1:abs(par_RealizationsBeforeSaving)
-
-									if IsPure
-										Current_State = TrivState(par_SystemSize);
-										par_NumGenerators = par_SystemSize;
-									else
-										Current_State = zeros(par_SystemSize,2*par_SystemSize);
-										par_NumGenerators = 0;
-									end
-
-									for jj=1:par_TotalTimeSteps
-										[Current_State,par_NumGenerators] = EvolFunc(Current_State,par_NumGenerators,C_Numbers_Int,Hdim,UnitaryFunc,RunOptions,S_Metric);
-										%fprintf('\nCore: %d, timestep: %d',par_Core_Index,jj)
-									end
-
-									currentsize = size(Current_State);
-									%fprintf('\nsumsum of current state: %d, size: [%d, %d], generators: %d', sum(sum(abs(Current_State))),currentsize(1),currentsize(2),par_NumGenerators)
-
-									par_Bigram = Bigrams(Clip(Current_State,Hdim,IsPure),par_NumGenerators)
-									currentsize = size(par_Bigram)
-									%fprintf(', bigram size: [%d, %d]',currentsize(1),currentsize(2))
-
-									%fprintf('\n [%d, ] \n',par_Bigram(1,1))
-									localTemp{kk,1} = LengthDistribution(par_Bigram,par_SystemSize);		% Length Distributions
-									localTemp{kk,2} = EntropyOfAllRegionSizes(par_Bigram,par_SystemSize);	% Subsystem entropy
-									localTemp{kk,3} = par_SystemSize - par_NumGenerators;					% Purification entropy
-
-								end
-
-							end
-
-							%                   End calculation.
-							TempArray{par_Core_Index} = localTemp;
-
-						end		% end parfor loop
-
-					catch ParforError
-						fprintf('\n >>: %s: ERROR in parfor loop.',SelfName)
-						fprintf('\n  ~~  %s',ParforError.identifier)
-						fprintf('\n  ~~  "%s"',ParforError.message)
-						fprintf('\n >>: Full error stack:\n')
-						PrintStack(ParforError)
-						error(ParforError)
-					end
-					
-					StateArray = TempArray;
-					if RealizationsBeforeSaving(SystemSize_Index)>0
-						TimeSteps_CurrentState = TimeSteps_CurrentState + RealizationsBeforeSaving(SystemSize_Index);
-							%if we did less than subPeriod, that's okay, since this 
-							%will still put matTime over N and not restart the loop
-					else
-						TimeSteps_CurrentState = SystemSizeValues(SystemSize_Index);
-					end
-					
-					%{
-					if it's been less than 5 min, run again. Add more time steps to the realization.
-					That is, unless there's no time steps remaining to calculate, and we need to save.
-					Then just wait a minute to prevent over-saving issues, then proceed.
-					While it would be nice to put the time check inside the parfor loop to reduce overhead,
-					  it allows the possibility for the realizations to get out of sync, time-wise, which we
-					  can't deal with.
-					We could also write this better, and have the `subPeriod<0' jobs run more realizations,
-					  But it's more complicated that it seems. This is only a just-in-case thing; set up the times better!
-					%}
-					
-					BKUP_tic_Limit = 10;
-					%	Number in seconds before going on to make a backup
-
-					if toc(BKUP_tic)<BKUP_tic_Limit
-						fprintf(' -@ %d/%d @- ',toc(BKUP_tic),BKUP_tic_Limit)
-						Has_Not_Been_Enough_Time = true;
-						if TimeSteps_CurrentState >= TotalTimeSteps(SystemSize_Index)
-							Has_Not_Been_Enough_Time = false;
-							pause(60)
-						end
-					else
-						Has_Not_Been_Enough_Time = false;
-					end
-					TimeBeforeMakingBKUP_Counter = TimeBeforeMakingBKUP_Counter + toc(BKUP_tic);
-					
-				end	% end of <while Has_Not_Been_Enough_Time>
-
-				EncodeStateArray()
-				%	Outside of initializing the states, the parfor loop is the only time that StateArray is changed.
-				
-				if Verbose; fprintf('\n VV: Has_Not_Been_Enough_Time/parfor loop(s) completed.'); end
-				
-	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-		%	Saving Code
-	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-				
-				StateArrayEmpty = false;
-
-				%{
-				for ii=1:numel(stateArray)
-					if numel(stateArray{ii})==0
-						fprintf('\n >>: ERROR. stateArray entry empty after parfor loop.\n >>: Restarting the realization (restarting MainCode)...')
-						initializeState = true;
-						matTime = 0; 	%	(these two variabels are global, so this is relevant.)
-						ErStr = struct('message','stateArray empty following parfor loop.','identifier','run_code_gen:stateArrayEmpty')
-						error(ErStr)
-					end
-				end
-				%}
-				%	I'm not sure yet if there's a corresponding problem in the parafermion code...
-				
-				c = clock;
-				fprintf('\n     Completed %d timesteps.... %.2d/%.2d, %.2d:%.2d  ',TimeSteps_CurrentState,c(2),c(3),c(4),c(5))
-					%    We'll just save all the data again and overwrite the old file. This helps us plug whatever leak
-					%    Matlab has when using '-append' like we do. Besides, the whole file's datasize is in the array
-					%    anyways, so it's not like it will take much more time than just saving the array...
-
-				saveSuccess = false;
-				trialCounter = 0;
-
-				%SaveData(ckptNameFull,cat(2,'''-v7.3'',',ckptDataString),true,'CKPT');
-				%	StateArray already Encoded after parfor loop.
-				SaveData(CKPT_Name_Fullpath,{CKPT_UsedVariables{:},'-v7.3'},true,'CKPT');
-
-				if TimeBeforeMakingBKUP_Counter >= TimeBeforeMakingBKUP 	%cycle the backup saves
-
-					if Verbose; fprintf('\n VV: Backup counter met. Backup saves:'); end
-
-					c2 = clock;
-
-					BKUP_InfoString = sprintf('Backup %.2d, made %.4d/%.2d/%.2d, %.2d:%.2d',CurrentNumber_TimesBackedUp+1,c2(1),c2(2),c2(3),c2(4),c2(5));
-					saveSuccess = false;
-					trialCounter = 0;
-					
-					%	This whole set of loops is for cycling the DATA_BKUP_# files
-
-					while (~saveSuccess) && (trialCounter<20) && isequal(exist(cat(2,DATA_Name_Fullpath,'__BKUP_B.mat'),'file'),2)
-
-						if Verbose; fprintf('\n   vv: B->C...'); end
-
-						try
-							saveSuccess = copyfile(cat(2,DATA_Name_Fullpath,'__BKUP_B.mat'),cat(2,DATA_Name_Fullpath,'__BKUP_C.mat'));
-							%	Note that the DATA_Name_BKUP_B name is already saved... but whatever
-							trialCounter = 0;
-							if Verbose; fprintf(' C Done.'); end
-						catch BCError
-							fprintf('\nERROR with backup B->C.')
-							fprintf('\n  ~~  %s',BCError.identifier)
-							fprintf('\n  ~~  "%s"',BCError.message)
-							fprintf('\n    Retrying...\n')
-							trialCounter = trialCounter + 1;
-							if Verbose; fprintf('   VV:  trialCounter = %d\n',trialCounter); end
-							pause(10)
-						end
-
-					end
-
-					saveSuccess = false;
-
-					while (~saveSuccess) && (trialCounter<20) && isequal(exist(cat(2,DATA_Name_Fullpath,'__BKUP_A.mat'),'file'),2)
-
-						if Verbose; fprintf('\n   vv: A->B...'); end
-
-						try
-
-							testOpen = load(cat(2,DATA_Name_Fullpath,'__BKUP_A'));
-								if Verbose; fprintf(' BKUP_A loaded successfully...'); end
-							saveSuccess = copyfile(cat(2,DATA_Name_Fullpath,'__BKUP_A.mat'),cat(2,DATA_Name_Fullpath,'__BKUP_B.mat'));
-								if Verbose; fprintf('\n   vv: BKUP_A saved to BKUP_B...'); end
-							testOpen = load(cat(2,DATA_Name_Fullpath,'__BKUP_B'));
-								if Verbose; fprintf(' (New) BKUP_B loaded successfully...'); end
-							trialCounter = 0;
-								if Verbose; fprintf(' B Done.'); end
-
-						catch ABError
-							fprintf('\n\nERROR with backup A->B.')
-							fprintf('\n  ~~  %s',ABError.identifier)
-							fprintf('\n  ~~  "%s"',ABError.message)
-							fprintf('\n    Retrying...\n')
-							trialCounter = trialCounter + 1;
-								if Verbose; fprintf('   VV:  trialCounter = %d\n',trialCounter); end
-							pause(30)
-						end
-
-					end
-
-					saveSuccess = false;
-
-					while (~saveSuccess) && (trialCounter<20)
-
-						if Verbose; fprintf('\n   vv: Data->A...'); end
-
-						try
-							%save(cat(2,DATA_Name_Full,'__BKUP_A'),'Out','JobInformation','CKPT_RunLog','specs','bkupinfo','N_i','p_i','q_i','circuits')
-							%	if Verbose; fprintf('\n   vv: Saved...'); end
-							%testOpen = load(cat(2,DATA_Name_Full,'__BK_A'));
-							%	if Verbose; fprintf(' testOpen success...'); end
-							fprintf('\nBKUP_InfoString = "%s"\n',BKUP_InfoString)
-							saveSuccess = SaveData(cat(2,DATA_Name_Fullpath,'__BKUP_A'),DATA_BKUPVariables,true,'DATA_BKUP_A');
-								if Verbose; fprintf('\n   vv: DATA backed up successfully...'); end
-							trialCounter = 0;
-								if Verbose; fprintf(' A Done.'); end
-						catch AError
-							fprintf('\n\nERROR with backup save A.')
-							fprintf('\n  ~~  %s',AError.identifier)
-							fprintf('\n  ~~  "%s"',AError.message)
-							fprintf('\n    Retrying...\n')
-							trialCounter = trialCounter + 1;
-							if Verbose; fprintf('   VV:  trialCounter = %d\n',trialCounter); end
-							pause(30)
-						end
-
-					end
-
-					if trialCounter>=20
-						fprintf('\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
-						fprintf('\n            MAJOR ERROR SAVING BKUP FILE. RETURNING...')
-						fprintf('\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n')
-						ErStr = struct('message','Major error saving DATA_BKUP file.','identifier',sprintf('%s:DataBkupFailure',SelfName));
-						error(ErStr)
-					end
-
-					%	This is the code for CKPT_BKUP
-
-					saveSuccess = false;
-					trialCounter = 0;
-
-					%	StateArray Encoded before start of BKUP code.
-					SaveData(CKPT_Name_Fullpath_BKUP,{CKPT_UsedVariables{:},'-v7.3'},true,'CKPT_BKUP');
-
-					CurrentNumber_TimesBackedUp = CurrentNumber_TimesBackedUp + 1;
-					TimeBeforeMakingBKUP_Counter = 0;
-
-					if Verbose; fprintf('\n VV: Current nubmer of times backed up = %d  VV',CurrentNumber_TimesBackedUp); end
-
-
-				end
-				
-				if runFresh
-					Number_TimesCalculationsSaved = Number_TimesCalculationsSaved + 1;	%Update now that the program has successfully contributed data
-					if Verbose; fprintf('\n 	VV: Number_TimesCalculationsSaved (# of successes) updated; program has contributed data.\n'); end
-					runFresh = false;
-				end
-				
-			end		%We've now completed this particular realization
-			
-			%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-			%	We now have a completed realization!
-			% 	Now that we have the realization(s), we get the data from it.
-
-			
-			if Verbose; fprintf('\n VV: matTime loop completed.'); end
-			
-			%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-			%	Calculate the quantities of this realization:
-
-			if RealizationsBeforeSaving(SystemSize_Index) > 0			%calculate the entropies
-
-				if Verbose; fprintf('\n VV: Doing entropy calculation...'); end 
-				
-				%	The relevant Out().Argument is a column cell that the following will be appended to:
-				TempS = cell(Number_ParallelRealizations,1);
-				TempLengthDist = TempS;
-				TempMixedS = TempS;
-				TempRealizationCount = TempS;
-
-				StateArrayEmpty = false;
-
-				for Realizations_Index=1:Number_ParallelRealizations      %couldn't think of a more clever way to do this...
-					TempRealizationCount{Realizations_Index}=1;
-				end
-
-				for Realizations_Index=1:Number_ParallelRealizations
-
-					if numel(StateArray{Realizations_Index})~=0
-
-						%if Verbose; fprintf('\n 	VV: StateArray{%d}.Number_Generators = %d',Realizations_Index,StateArray{Realizations_Index}.Number_Generators); end
-							
-						TempBigrams = Bigrams(Clip(StateArray{Realizations_Index}.State,Hdim,IsPure),StateArray{Realizations_Index}.Number_Generators);
-						TempLengthDist{Realizations_Index} = LengthDistribution(TempBigrams,SystemSizeValues(SystemSize_Index));
-						TempS{Realizations_Index} = EntropyOfAllRegionSizes(TempBigrams,SystemSizeValues(SystemSize_Index));
-						TempMixedS{Realizations_Index} = SystemSizeValues(SystemSize_Index) - StateArray{Realizations_Index}.Number_Generators;
-					
-					else
-
-						fprintf('\nBad read on data. StateArray{ii} = {}. Skipping this circuit entry...\n\n')
-						TempS = {};
-						TempLengthDist = {};
-						TempMixedS = {};
-						TempRealizationCount = {};
-						StateArrayEmpty = true;
-						StateArrayEmptyCounter = StateArrayEmptyCounter + 1;
-						break 	%we don't need to reapeat this code $subRealizations times. Just the once will work.
-
-					end
-
-				end
-
-			else % RealizationsPerSystemSize(SystemSize_Index) < )
-
-				if Verbose; fprintf('\n VV: Doing entropy tallies...'); end
-				TempLengthDist = {};
-				TempS = {};
-				TempMixedS = {};
-				RNum = Number_ParallelRealizations*abs(RealizationsBeforeSaving(SystemSize_Index));	 %subRealizations(N_i)*abs(subPeriod(N_i));
-				TempRealizationCount = mat2cell(ones(RNum,1),ones(1,RNum));
-				%	this says to make an RNum x 1 matrix of ones, and split them into a 20 row cell, with one entry per row.
-				%	it gives us an RNum x 1 cell with 1 in each entry, like in the subPeriod>0 case.
-				for Realizations_Index=1:Number_ParallelRealizations
-
-					if numel(StateArray{Realizations_Index})~=0
-						%	StateArray{ii} will be a (Number_ParallelRealizations)-by-3 cell.
-						%	The three entries will be: 
-						%		{kk,1} = Length Distribution
-						%		{kk,2} = Subsystem Entropy
-						%		{kk,3} = Purification Entropy
-						TempLengthDist = cat(1,TempLengthDist,StateArray{Realizations_Index}{:,1});
-						TempS = cat(1,TempS,StateArray{Realizations_Index}{:,2});
-						TempMixedS = cat(1,TempMixedS,StateArray{Realizations_Index}{:,3});
-						StateArrayEmpty = false;
-					else
-						% there are no entries in stateArray. Don't know why this happens sometimes...
-						% It may happen when /home/jm117 doesn't have enough free space to do what's needed...
-						% nonetheless, we cap it at 20 times/circuit, to avoid 8GB Output files, again...
-						
-						fprintf('\nBad read on data. StateArray{ii} = {}. Skipping this circuit entry...\n\n')
-						TempLengthDist = {};
-						TempS = {};
-						TempMixedS = {};
-						TempRealizationCount = {};
-						StateArrayEmpty = true;
-						StateArrayEmptyCounter = StateArrayEmptyCounter + 1;
-						break 	%we don't need to reapeat this code $subRealizations times. Just the once will work.
-
-					end
-
-				end
-
-			end		%We've now tabulated the properties of this realization
-			
-
-			%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-			%	Now that we've calculated the quantities, let's collect the data:
-				
-
-			if ~StateArrayEmpty
-				%{
-				Out(q_i,N_i,p_i).p = PVals(p_i);
-				Out(q_i,N_i,p_i).N = NVals(N_i);
-				Out(q_i,N_i,p_i).q = QVals{p_i}(q_i);
-				Out(q_i,N_i,p_i).t = t;
-				Out(q_i,N_i,p_i).S = cat(1,Out(q_i,N_i,p_i).S,S);
-				Out(q_i,N_i,p_i).ns = cat(1,Out(q_i,N_i,p_i).ns,ns);
-				Out(q_i,N_i,p_i).reals = cat(1,Out(q_i,N_i,p_i).reals,sR);
-				SaveData(DATA_Name_Full,'''Out'',''JobInformation'',''CKPT_RunLog'',''specs''',true,'Data');
-				fprintf('  Completed (N,p,q) = (%d,%.2f,%.2f), circuit %d\n',NVals(N_i),PVals(p_i),QVals{p_i}(q_i),circuits)
-				%}
-
-				Out(SystemSize_Index,MeasurementProbability_Index,InteractingProbability_Index).SystemSize = SystemSizeValues(SystemSize_Index);
-				Out(SystemSize_Index,MeasurementProbability_Index,InteractingProbability_Index).MeasurementProbability = MeasurementProbabilityValues(MeasurementProbability_Index);
-				Out(SystemSize_Index,MeasurementProbability_Index,InteractingProbability_Index).InteractingProbability = InteractingProbabilityValues(InteractingProbability_Index);
-				Out(SystemSize_Index,MeasurementProbability_Index,InteractingProbability_Index).TotalTimeSteps = TotalTimeSteps(SystemSize_Index);
-				Out(SystemSize_Index,MeasurementProbability_Index,InteractingProbability_Index).LengthDistribution = cat(1,Out(SystemSize_Index,MeasurementProbability_Index,InteractingProbability_Index).LengthDistribution,TempLengthDist);
-				Out(SystemSize_Index,MeasurementProbability_Index,InteractingProbability_Index).SubsystemEntropy = cat(1,Out(SystemSize_Index,MeasurementProbability_Index,InteractingProbability_Index).SubsystemEntropy,TempS);
-				Out(SystemSize_Index,MeasurementProbability_Index,InteractingProbability_Index).PurificationEntropy = cat(1,Out(SystemSize_Index,MeasurementProbability_Index,InteractingProbability_Index).PurificationEntropy,TempMixedS);
-				Out(SystemSize_Index,MeasurementProbability_Index,InteractingProbability_Index).Realizations = cat(1,Out(SystemSize_Index,MeasurementProbability_Index,InteractingProbability_Index).Realizations,TempRealizationCount);
-				
-				
-
-					%   Below code replaces the "while p_i" and "while q_i" loops
-					%   so that every point each (p,q) gets one realization per circuit
-
-				InteractingProbability_Index = InteractingProbability_Index + 1;
-
-				if InteractingProbability_Index > Number_InteractingProbabilities
-
-					InteractingProbability_Index = 1;
-					MeasurementProbability_Index = MeasurementProbability_Index + 1;
-
-					if MeasurementProbability_Index > Number_MeasurementProbabilities
-
-						MeasurementProbability_Index = 1;
-						RealizationsPerSystemSize_Counter = RealizationsPerSystemSize_Counter + 1;
-						StateArrayEmptyCounter = 0;
-
-					end
-
-				end
-					%    We'll just save all the data again and overwrite the old file. This helps us plug whatever leak
-					%    Matlab has when using '-append' like we do.
-					%	 -- I'd like to switch this one back to "-append", since we save the entire CKPT data after initializing
-					%		each the stateArray, after each parfor loop, and whenever we do a BKUP save... but I don't know
-					%	 	exactly what variables I should save... -- 27/Nov/2021
-
-					%	Hypothesis: we save the _Index variables here, using -append, so that on the next run, the system knows to do the next point.
-					%	If StateArray is empty, we skip this, and the _Index variables stay the same. 
-					%	The following reset code still goes through, and we just re-run this point.
-				%SaveData(CKPT_Name_Full,CKPT_SaveString,true,'CKPT');
-
-			elseif StateArrayEmptyCounter>=20
-				fprintf('\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
-				fprintf('\n            MAJOR ERROR: stateArray consistently empty. Returning...')
-				fprintf('\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n')
-				ErStr = struct('message','stateArray consistently empty...','identifier',sprintf('%s:stateArrayEempty',SelfName));
-				error(ErStr)
-			end % End of Data collecting if-end statement
-			
-
-			%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-			%	Now that we've collected the data (or not if StateArray was empty),
-			%	Let's save our progress:
-
-			InitializeState = true;
-			TimeSteps_CurrentState = 0;
-			SaveData(DATA_Name_Fullpath,DATA_UsedVariables,true,'DATA');
-			SaveData(CKPT_Name_Fullpath,{CKPT_UsedVariables{:},'-v7.3'},true,'CKPT');
-			
-			if Verbose; fprintf(' VV: circuit run complete. SystemSize_Index = %d, MeasurementProbability_Index = %d, InteractingProbability_Index = %d, RealizationsPerSystemSize_Counter = %d',SystemSize_Index,MeasurementProbability_Index,InteractingProbability_Index,RealizationsPerSystemSize_Counter); end
-			
-		end 	
-
-
-		%   We've finished this N value. On to the next one.
-		if Verbose; fprintf('\n VV: ''circuits'' loop completed.'); end
-
-		RealizationsPerSystemSize_Counter = 1;
-		MeasurementProbability_Index = 1;
-		InteractingProbability_Index = 1;
-		SystemSize_Index = SystemSize_Index + 1;
-
-		InitializeState = true;
-		TimeSteps_CurrentState = 0;
-
-		SaveData(CKPT_Name_Fullpath,{CKPT_UsedVariables{:},'-v7.3'},true,'CKPT')
-		%SaveData(ckptNameFull,'''N_i'',''p_i'',''q_i'',''circuits'',''initializeState'',''matTime'',''-append''',false,'CKPT -append')
-		
-		if Verbose; fprintf(' VV: N value complete. SystemSize_Index = %d, MeasurementProbability_Index = %d, InteractingProbability_Index = %d, RealizationsPerSystemSize_Counter = %d',SystemSize_Index,MeasurementProbability_Index,InteractingProbability_Index,RealizationsPerSystemSize_Counter); end
-	end
-
-	if Verbose; fprintf('\n VV: N_i loop completed.'); end
-	
-	%	If this code is running, then we've gone through all of the NVals, as N_i > Nnum
-	fprintf('\n\n\n      All done??\n\n')
-    
-	Completed = true;
 	
 end
 
@@ -1758,7 +1748,13 @@ end
 	better. Requires less of me remembering what each variable is.
 25/Feb/2023 - It seems to be working well enough. Gonna dump this onto klone and
 	hope for the best!
-03/March/2023 - Fixed a major error in the code, in which I never clipped the state
+03/Mar/2023 - Fixed a major error in the code, in which I never clipped the state
 	before finding the bigrams...
+14/Mar/2023 - The Free-versus-Interacting project for March Meeting failed, but
+	I updated the code to be able to run bosons now, which can be flagged
+	in RunOpitons by 'StatisticsType' = 'Fermionic' or 'Bosonic'. It defaults
+	to Fermionic.
+		I'm also looking towards publishing this code on GitHub, so I took the
+	main() code and put it back into the main part of the function.
 	
 %}
