@@ -831,7 +831,16 @@ function Completed = MainCode
 		fprintf('\nSystem Size = %d',SystemSizeValues(SystemSize_Index));
 		if Verbose; fprintf('\n VV: System Size Index = %d',SystemSize_Index); end
 		
-		S_Metric = SMetric(2*SystemSizeValues(SystemSize_Index));
+        %   S_Metric calculation, based on StatisticsType
+        if isfield(RunOptions,'StatisticsType')
+            if isequal(getfield(RunOptions,'StatisticsType'),'Fermionic')
+                S_Metric = SMetric(SystemSizeValues(SystemSize_Index));
+            elseif isequal(getfield(RunOptions,'StatisticsType'),'Bosonic')
+                S_Metric = SMetricBoson(SystemSizeValues(SystemSize_Index));
+            end
+        else    % Defaults to fermions.
+            S_Metric = SMetric(SystemSizeValues(SystemSize_Index));
+        end
 
 		StateArrayEmptyCounter = 0; 	% we will also reset this to zero after each full circuit
 
@@ -1440,6 +1449,7 @@ function Completed = MainCode
 	
 	%	If this code is running, then we've gone through all of the NVals, as N_i > Nnum
 	fprintf('\n\n\n      All done??\n\n')
+    
 	Completed = true;
 	
 end

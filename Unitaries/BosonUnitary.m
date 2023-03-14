@@ -7,13 +7,13 @@ S = speye(NumColumns);
 
 for PairIndex = 0:NumPairs-2
 
-    S_Local = random4d(Hdim);
+    S_Local = BosonSymplectic(Hdim);
     ColumnIndex = 4*PairIndex+2*Offset;
     S(ColumnIndex+1:ColumnIndex+4, ColumnIndex+1:ColumnIndex+4) = S_Local;
 
 end
 
-S_Local = random4d(Hdim);
+S_Local = BosonSymplectic(Hdim);
 
 if Offset==0
     Indices = NumColumns-3:NumColumns;

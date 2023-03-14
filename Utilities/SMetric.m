@@ -1,4 +1,4 @@
-function Out = SMetric(LiteralSize,IsSingle)
+function Out = SMetric(NumSites,IsSingle)
 % gives the (size)x(size) symplectic metric
 
 if nargin<2
@@ -6,13 +6,13 @@ if nargin<2
 end
 
 if IsSingle
-    H = single(zeros(LiteralSize));
+    H = single(zeros(2*NumSites));
 else
-    H = zeros(LiteralSize);
+    H = zeros(2*NumSites);
 end
 
-for ii=1:LiteralSize
-    for jj=ii:LiteralSize
+for ii=1:2*NumSites
+    for jj=ii:2*NumSites
         H(ii,jj)=1;
     end
 end
