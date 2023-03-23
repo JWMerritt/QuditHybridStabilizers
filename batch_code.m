@@ -29,7 +29,7 @@ fprintf('\n B: Printing diary...')
 Diary_Fullname_Fullpath = cat(2,Diary_Name_Fullpath,'.diary')
 
 while ~isequal(RunJob.Tasks(1).State,'finished')
-    pause(30)
+    pause(30) % we only want the diary to update every 30 seconds or so.
     if isfile(Diary_Fullname_Fullpath)
         delete(Diary_Fullname_Fullpath);
     end

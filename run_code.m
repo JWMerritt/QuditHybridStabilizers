@@ -145,6 +145,9 @@ switch RunLocation
 		addpath(genpath('C:\Users\jmerr\Documents\MATLAB\ParafermionComponents'));
 	case "ASRock_Desktop"
 		addpath(genpath('D:\Users Things\Documents\MATLAB\Parafermions'));
+    case "X51 Desktop"
+        addpath(genpath('D:\Program Files\MATLAB\Programs\Parafermions'))
+        addpath(genpath('D:\Program Files\MATLAB\Programs\ParafermionComponents'))
 	otherwise
 		fprintf("Invalid RunLocation. Update run_code() parameters.\n")
 		return
