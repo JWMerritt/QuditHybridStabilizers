@@ -145,7 +145,7 @@ switch RunLocation
 		addpath(genpath('C:\Users\jmerr\Documents\MATLAB\ParafermionComponents'));
 	case "ASRock_Desktop"
 		addpath(genpath('D:\Users Things\Documents\MATLAB\Parafermions'));
-    case "X51 Desktop"
+    case "X51_Desktop"
         addpath(genpath('D:\Program Files\MATLAB\Programs\Parafermions'))
         addpath(genpath('D:\Program Files\MATLAB\Programs\ParafermionComponents'))
 	otherwise
@@ -766,10 +766,12 @@ while ~Complete
 
 			%   S_Metric calculation, based on StatisticsType
 			if isfield(RunOptions,'StatisticsType')
-				if isequal(getfield(RunOptions,'StatisticsType'),'Fermionic')
+				if isequal(getfield(RunOptions,'StatisticsType'),'Fermionic')||isequal(getfield(RunOptions,'StatisticsType'),'Fermion')||isequal(getfield(RunOptions,'StatisticsType'),1)
 					S_Metric = SMetric(SystemSizeValues(SystemSize_Index));
-				elseif isequal(getfield(RunOptions,'StatisticsType'),'Bosonic')
+				elseif isequal(getfield(RunOptions,'StatisticsType'),'Bosonic')||isequal(getfield(RunOptions,'StatisticsType'),'Boson')||isequal(getfield(RunOptions,'StatisticsType'),0)
 					S_Metric = SMetricBoson(SystemSizeValues(SystemSize_Index));
+                else
+                    error('Invalid StatisticsType. Must be one of "Boson, "Bosonic", 0, "Fermion", "Fermionic", or 1.')
 				end
 			else    % Defaults to fermions.
 				S_Metric = SMetric(SystemSizeValues(SystemSize_Index));
@@ -1755,8 +1757,8 @@ end
 	before finding the bigrams...
 14/Mar/2023 - The Free-versus-Interacting project for March Meeting failed, but
 	I updated the code to be able to run bosons now, which can be flagged
-	in RunOpitons by 'StatisticsType' = 'Fermionic' or 'Bosonic'. It defaults
-	to Fermionic.
+	in RunOpitons by 'StatisticsType' = 'Fermionic' or 'Bosonic'. Defaults to 
+	Fermionic whenever 'StatisticsType' is not defined in RunOptions.
 		I'm also looking towards publishing this code on GitHub, so I took the
 	main() code and put it back into the main part of the function.
 	
