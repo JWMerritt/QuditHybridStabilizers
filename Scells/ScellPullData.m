@@ -1,6 +1,12 @@
 function [SystemSizeValues,MeasurementProbabilityValues,InteractingProbabilityValues,TotalTimeSteps,Out,Realizations,sig,roughLimits] = ScellPullData(Scell,arg,roughLimit)
 %sig is std deviation; roughLimits is the number of times data was thrown due to being over the roughLimit
 
+if nargin==1
+    if isequal(Scell,'info')
+        fprintf('\n -- [SystemSizeValues,MeasurementProbabilityValues,InteractingProbabilityValues,TotalTimeSteps,Out,Realizations,sig,roughLimits] = ScellPullData(Scell,arg,roughLimit)\n')
+        return
+    end
+end
 if nargin<3
 	roughLimit = inf;
 end
@@ -32,7 +38,7 @@ roughLimits = [];
 
 for IterativeScellEntryIndex=1:numel(Scell)
 
-    CurrentArgEntries = getfield(Scell{IterativeScellEntryIndex},arg);   %should give us the cell array we're looking for
+    ArgData_CurrentScellEntry = getfield(Scell{IterativeScellEntryIndex},arg);   %should give us the cell array we're looking for
     %   This will be a single value in the case of PurificationEntropy, and a column matrix for LengthDistribution / SubsystemEntropy
 
     SystemSizeValues(IterativeScellEntryIndex)=Scell{IterativeScellEntryIndex}.SystemSize;
@@ -60,17 +66,17 @@ for IterativeScellEntryIndex=1:numel(Scell)
     roughLimits(ii) = entries - sum(keptOnes);
     %}
 
-    Number_Args_Current = numel(CurrentArgEntries);
-    Realizations(IterativeScellEntryIndex) = Number_Args_Current;
-    ArgOutCurrent = CurrentArgEntries{1};
+    Number_Data_in_Current_Arg = numel(ArgData_CurrentScellEntry);
+    Realizations(IterativeScellEntryIndex) = Number_Data_in_Current_Arg;
+    ArgOutCurrent = ArgData_CurrentScellEntry{1};
     %Realizations_Counter = Scell{IterativeScellEntryIndex}.Realizations{1};
 
-    for IterativeArgEntryIndex=2:Number_Args_Current
-        ArgOutCurrent = ArgOutCurrent + CurrentArgEntries{IterativeArgEntryIndex};
+    for IterativeArgEntryIndex=2:Number_Data_in_Current_Arg
+        ArgOutCurrent = ArgOutCurrent + ArgData_CurrentScellEntry{IterativeArgEntryIndex};
         %   We force all Realizations=1 so that we can do the variance calculation.
     end
 
-    FinalArgOut = ArgOutCurrent/Number_Args_Current;
+    FinalArgOut = ArgOutCurrent/Number_Data_in_Current_Arg;
     Out{IterativeScellEntryIndex} = FinalArgOut;
 
     %{
@@ -80,11 +86,11 @@ for IterativeScellEntryIndex=1:numel(Scell)
     holdVar = [];
     %}
     
-    VarianceBuffer = (FinalArgOut - CurrentArgEntries{1});
-    for jj=2:Number_Args_Current
-        VarianceBuffer = VarianceBuffer + (FinalArgOut - CurrentArgEntries{jj}).^2;
+    VarianceBuffer = (FinalArgOut - ArgData_CurrentScellEntry{1}).^2;
+    for jj=2:Number_Data_in_Current_Arg
+        VarianceBuffer = VarianceBuffer + (FinalArgOut - ArgData_CurrentScellEntry{jj}).^2;
     end
-    sig = sqrt(VarianceBuffer/(Number_Args_Current-1));
+    sig{IterativeScellEntryIndex} = sqrt(VarianceBuffer/(Number_Data_in_Current_Arg-1));
 
 
 end

@@ -3,7 +3,7 @@ function run_code(CKPT_Name_Fullpath,RunLocation,RC,Verbose)
 %	This should be the full path name, starting from /mmfs1/gscratch/...
 %	>> Edit this locally (using git), then upload to hyak.
 
-RunVersion = 'PARA_1.0'
+RunVersion = 'PARA_1.1'
 SelfName = 'run_code'; % mostly for errors
 
 
