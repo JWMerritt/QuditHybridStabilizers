@@ -1,9 +1,9 @@
-function [Psi,NumGenerators] = Measure(Psi,NumGenerators,ColumnIndex,Hdim,NumRows,NumColumns,S_Metric)
-    %   Gives the generating set for the collapsed state, after a \gamma_i \gamma_{i+1}^\dag measurement, where i=ColumnIndex.
+function [Psi,NumGenerators] = MeasureBoson(Psi,NumGenerators,ColumnIndex,Hdim,NumRows,NumColumns,S_Metric)
+    %   Gives the generating set for the collapsed state, after a Z=(0,1) measurement, where i=ColumnIndex.
     
-    if nargin<=4
+    if nargin<=7
         [NumRows,NumColumns] = size(Psi);
-        S_Metric = SMetric(NumColumns);
+        S_Metric = SMetricBoson(NumRows);
     end
     
     %{
@@ -32,10 +32,11 @@ function [Psi,NumGenerators] = Measure(Psi,NumGenerators,ColumnIndex,Hdim,NumRow
     %InProd = @(a,b) mod(a*S_Metric*b',Hdim);
     
     MeasureGenerator = zeros(1,NumColumns);
-    MeasureGenerator([ColumnIndex,(ColumnIndex~=NumColumns)*ColumnIndex+1]) = mod([1,-1],Hdim);
+    MeasureGenerator([ColumnIndex,(ColumnIndex~=NumColumns)*ColumnIndex+1]) = mod([0,1],Hdim);
     %   This represents the operator \gamma_{i} \gamma_{i+1}^\dagger
     %   The logic in the second entry of the indexing is so that if ColumnIndex is the last column, the pair wraps around the system,
     %     and we have \gamma_{L} \gamma_{1}^\dagger.
+    %   For bosons, this code isn't relevant, since we should only choose ColumnIndex to be an odd number
     
 
     %   Get list of inner products
@@ -47,29 +48,38 @@ function [Psi,NumGenerators] = Measure(Psi,NumGenerators,ColumnIndex,Hdim,NumRow
         % Then the state is already an eigenstate of this measurement operator.
  
         if NumGenerators<NumRows
+            % And we have a mixed state
+            % If our state is not already an eigenstate of MeasureGenerator 
+            %   (i.e. MeasureGenerator is not in our stabilizer group <=> MeasureGenerator is not in the rowspace of Psi)
+            %   then MeasureGenerator becomes a new generator of our state
 
             Psi(NumGenerators+1,:) = MeasureGenerator;
                 %   We now need to check if the new MeasureGenerator is already a known stabilizer
             CheckRows = sum(RowReduceMod(Psi(1:(NumGenerators+1),:),Hdim)');
                 %   If MeasureGenerator is dependent on what's already there, then there will be a zero row in our reduced matrix.
+                %   CheckRows is just the sum of all entries in each row; since this is already mod Hdim, there will be no negative numbers,
+                %       and CheckRows(ii) will only be zero if row ii is zero.
+                %   Note that we're not actually changing Psi here
             if numel(find(CheckRows==0))==0
                 %   No zero rows - MeasureGenerator is independent
                 NumGenerators = NumGenerators + 1;
             else
+                %   Zero rows - MeasureGenerator is not independent
                 Psi(NumGenerators+1,:) = zeros(1,NumColumns);
             end
 
             return
 
         end
+            % If NumGenerators=NumRows, then we do nothing - the state is already an eigenstate.
 
-    else
+    else % There is a nonzero commutant
 
         %   Get the generator that we'll use to make all the others commute
-        ReplaceableGenerator = mod(ModInverse(Commutants(NonzeroCommutants(1)),Hdim)*Psi(NonzeroCommutants(1),:),Hdim);
+        ReplaceableGenerator = mod( ModInverse( Commutants(NonzeroCommutants(1)) ,Hdim) * Psi(NonzeroCommutants(1),:),Hdim );
         %   This should have SProd(ReplaceableGenerator,MeasurementGenerator) = 1
 
-        Psi(NonzeroCommutants,:) = mod( Psi(NonzeroCommutants,:) - Commutants(NonzeroCommutants)*ReplaceableGenerator, Hdim );
+        Psi(NonzeroCommutants,:) = mod( Psi(NonzeroCommutants,:) - Commutants(NonzeroCommutants)*ReplaceableGenerator ,Hdim);
         %   This forces Psi(ii,:) to commute with MeasureGenerator.
         %   This will also make the ReplaceableGenerator row become all zeroes, but that's okay since we'll replace it later.
 
@@ -77,51 +87,8 @@ function [Psi,NumGenerators] = Measure(Psi,NumGenerators,ColumnIndex,Hdim,NumRow
         %   Now, we just replace the ReplaceableGenerator with the MeasureGenerator
 
         Psi(NonzeroCommutants(1),:) = MeasureGenerator;
+        %!!?!???!?!???!?!?!?
 
-    end
-
-    %{
-    ReplaceableRowIndex = 0;
-
-    for IterativeRowIndex=1:NumGenerators
-        Product = InProd(Psi(IterativeRowIndex,:),MeasureGenerator);
-        if Product==0
-            % do nothing and continue to iterate
-        else
-            ReplaceableRowIndex = IterativeRowIndex;
-            inverse = ModInverse(Product,Hdim);
-            ReplaceableGenerator = inverse*Psi(ReplaceableRowIndex,:);
-            %   This is now an independent generator such that <ReplaceableGenerator,MeasureGenerator> = +1.
-            break
-        end
     end
     
-    if ReplaceableRowIndex==0
-        % Then the state is already an eigenstate of this measurement operator.
-        
-        if NumGenerators<NumRows
-            NumGenerators = NumGenerators + 1;
-            Psi(NumGenerators,:) = MeasureGenerator;
-        end
-
-    else
-
-        for IterativeRowIndex = ReplaceableRowIndex+1:NumGenerators
-            %   We know that the rows above this already commute with MeasureGenerator
-            
-            Commutant = InProd(Psi(IterativeRowIndex,:),MeasureGenerator);
-            if Commutant~=0
-                Psi(IterativeRowIndex,:) = mod(Psi(IterativeRowIndex,:) - Commutant*ReplaceableGenerator,Hdim);
-                %   This forces In(IterativeRowIndex,:) to commute with MeasureGenerator
-            end
-        end
-        %   At this point, we should have an equivalent generating set, with only ReplaceableGenerator not commuting with MeasureGenerator.
-        %   Now, we just replace the ReplaceableGenerator with the MeasureGenerator
-
-        Psi(ReplaceableRowIndex,:) = MeasureGenerator;
-
-    end
-    %}
-    
-    
-    end
+end

@@ -1,4 +1,4 @@
-function  [Psi,NumGenerators] = TimeStepBasic(Psi,NumGenerators,C_Numbers_Int,Hdim,UnitaryFunc,RunOptions,S_Metric)
+function  [Psi,NumGenerators] = TimeStepBosonic(Psi,NumGenerators,C_Numbers_Int,Hdim,UnitaryFunc,RunOptions,S_Metric)
 %   Applies one time step, with periodic BC, alternating each step.
 %   Measurements follow the pairings of the unitaries just applied.
 %
@@ -24,11 +24,12 @@ if floor(NumPairs)~=NumPairs
 end
 
 if nargin<=5
-    S_Metric = SMetric(NumColumns);
+    S_Metric = SMetricBoson(NumColumns);
 end
 
 NumSites = NumRows;
 %   Just here for code readability
+%   NumSites = NumColumns/2 = NumRows
 
 Num_C_Numbers = numel(C_Numbers_Int);
 
@@ -51,10 +52,10 @@ for IterativeSiteIndex=1:NumSites
     end
 end
 
+%fprintf('-%d-',numel(MeasurementSites));
 
-
-for IterativeSiteIndex=MeasurementSites
-    [Psi,NumGenerators] = Measure(Psi,NumGenerators,IterativeSiteIndex,Hdim,NumRows,NumColumns,S_Metric);
+for IterativeColumnIndex=MeasurementSites
+    [Psi,NumGenerators] = MeasureBoson(Psi,NumGenerators,IterativeColumnIndex,Hdim,NumRows,NumColumns,S_Metric);
     %   has inputs Measure(Psi,ColumnIndex,Hdim,NumRows,NumColumns,S_Metric)
 end
 
@@ -73,15 +74,16 @@ MeasurementSites = [];
 
 for IterativeSiteIndex=1:NumSites
     if rand<=RunOptions.MeasurementProbability
-        MeasurementSites = [MeasurementSites,2*IterativeSiteIndex];
-        %   Only allows (2k,2k+1) measurement pairs.
+        MeasurementSites = [MeasurementSites,2*IterativeSiteIndex-1];
+        %   Only allows (2k-1,2k) measurement pairs.
+        %   We don't do cross-site measurements for bosons, only measurements of Z ~ (0,1)
     end
 end
 
+%fprintf('-%d-',numel(MeasurementSites));
 
-
-for IterativeSiteIndex=MeasurementSites
-    [Psi,NumGenerators] = Measure(Psi,NumGenerators,IterativeSiteIndex,Hdim,NumRows,NumColumns,S_Metric);
+for IterativeColumnIndex=MeasurementSites
+    [Psi,NumGenerators] = MeasureBoson(Psi,NumGenerators,IterativeColumnIndex,Hdim,NumRows,NumColumns,S_Metric);
     %   has inputs Measure(Psi,ColumnIndex,Hdim,NumRows,NumColumns,S_Metric)
 end
 

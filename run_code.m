@@ -3,7 +3,7 @@ function run_code(CKPT_Name_Fullpath,RunLocation,RC,Verbose)
 %	This should be the full path name, starting from /mmfs1/gscratch/...
 %	>> Edit this locally (using git), then upload to hyak.
 
-RunVersion = 'PARA_1.1'
+RunVersion = 'PARA_1.1.1'
 SelfName = 'run_code'; % mostly for errors
 
 
@@ -698,6 +698,21 @@ InteractingProbabilityValues
 RealizationsPerSystemSize
 
 
+%	These are here for readability.
+%	We allow a fermionic system to be identified by 'Fermionic', 'Fermion', or the number 1. Similar for bosons.
+System_Is_Fermionic = false; System_Is_Bosonic = false;
+if isfield(RunOptions,'StatisticsType')
+	if isequal(getfield(RunOptions,'StatisticsType'),'Fermionic')||isequal(getfield(RunOptions,'StatisticsType'),'Fermion')||isequal(getfield(RunOptions,'StatisticsType'),1);
+		System_Is_Fermionic = true;
+	elseif isequal(getfield(RunOptions,'StatisticsType'),'Bosonic')||isequal(getfield(RunOptions,'StatisticsType'),'Boson')||isequal(getfield(RunOptions,'StatisticsType'),0)
+		System_Is_Bosonic = true;
+	else
+		error('Invalid StatisticsType. Must be one of "Boson, "Bosonic", 0, "Fermion", "Fermionic", or 1.')
+	end
+end
+
+
+
 fprintf('\n\n.....\n Running Level %d (%d)\n....\n\n',Number_TimesCalculationsSaved+1,Number_TimesLoaded+1)
 Number_TimesLoaded = Number_TimesLoaded+1; 	%Update now that the program has launched successfully.
 if Verbose; fprintf('\n VV: Number_TimesLoaded (# of startups) updated; program launched successfully.\n'); end
@@ -765,18 +780,13 @@ while ~Complete
 			
 
 			%   S_Metric calculation, based on StatisticsType
-			if isfield(RunOptions,'StatisticsType')
-				if isequal(getfield(RunOptions,'StatisticsType'),'Fermionic')||isequal(getfield(RunOptions,'StatisticsType'),'Fermion')||isequal(getfield(RunOptions,'StatisticsType'),1)
-					S_Metric = SMetric(SystemSizeValues(SystemSize_Index));
-				elseif isequal(getfield(RunOptions,'StatisticsType'),'Bosonic')||isequal(getfield(RunOptions,'StatisticsType'),'Boson')||isequal(getfield(RunOptions,'StatisticsType'),0)
-					S_Metric = SMetricBoson(SystemSizeValues(SystemSize_Index));
-                else
-                    error('Invalid StatisticsType. Must be one of "Boson, "Bosonic", 0, "Fermion", "Fermionic", or 1.')
-				end
+			if System_Is_Fermionic
+				S_Metric = SMetric(SystemSizeValues(SystemSize_Index));
+			elseif System_Is_Bosonic
+				S_Metric = SMetricBoson(SystemSizeValues(SystemSize_Index));
 			else    % Defaults to fermions.
 				S_Metric = SMetric(SystemSizeValues(SystemSize_Index));
 			end
-
 
 			StateArrayEmptyCounter = 0; 	% we will also reset this to zero after each full circuit
 
@@ -809,13 +819,23 @@ while ~Complete
 					if Verbose; fprintf('\n VV: Initializing TrivState'); end
 
 					if IsPure
+
 						if Verbose; fprintf(' for IsPure == true ( TrivState() ).'); end
+
 						StartState = TrivState(SystemSizeValues(SystemSize_Index));
+
+						if System_Is_Bosonic
+							StartState(StartState==-1)=0;
+						end
+
 						Number_Generators = SystemSizeValues(SystemSize_Index);
+
 					else
+
 						if Verbose; fprintf(' for IsPure == false ( Zeros state ).'); end
 						StartState = zeros(SystemSizeValues(SystemSize_Index),2*SystemSizeValues(SystemSize_Index));
 						Number_Generators = 0;
+
 					end
 					
 					StateArray = cell(Number_ParallelRealizations,1);
@@ -952,6 +972,9 @@ while ~Complete
 
 										if IsPure
 											Current_State = TrivState(par_SystemSize);
+											if System_Is_Bosonic
+												Current_State(Current_State==-1)=0;
+											end
 											par_NumGenerators = par_SystemSize;
 										else
 											Current_State = zeros(par_SystemSize,2*par_SystemSize);

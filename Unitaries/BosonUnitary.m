@@ -21,6 +21,8 @@ if Offset==0
 elseif Offset==1
     Indices = [NumColumns-1, NumColumns, 1, 2];
     S(Indices,Indices) = S_Local;
+else
+    error('Offset must be 0 or 1.')
 end
 
 Psi = mod(Psi*S,Hdim);
