@@ -1,18 +1,24 @@
-function [Out,LessThanFlag] = LengthDistribution(Bigrams_,SystemSize,GiveWarning)
+function [Out,LessThanFlag] = LengthDistribution(BigramsIn,SystemSize,GiveWarning)
 %   Gives the distribution of lengths of a set of bigrams. Out(L) = number of stabilizers of length L.
 
 if nargin<3
     GiveWarning = false;
 end
 
-[NumRows,NumColumns] = size(Bigrams_);
+[NumRows,NumColumns] = size(BigramsIn);
+
+if NumColumns~=2
+    ColErrStruct = struct('message','Error in LengthDistribution: Bigram does not have two columns. Make sure the input is a Bigram.','identifier','LengthDistribution:BigramColumnError');
+    error(ColErrStruct)
+end
 
 Out = zeros(SystemSize,1);
 if NumRows==0
     return % The state is completely mixed.
 end
 
-Lengths = ceil((Bigrams_(:,2) - Bigrams_(:,1))/2);
+Lengths = ceil((BigramsIn(:,2) - BigramsIn(:,1))/2) + 1;
+% With this +1, generators supported on a single site are cosidered to have a length of 1.
 
 for ii=1:SystemSize
     Out(ii) = sum(Lengths==ii);
