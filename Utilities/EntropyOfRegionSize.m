@@ -1,5 +1,6 @@
 function Out = EntropyOfRegionSize(RegionSize,BigramIn,SystemSize)
 % Calculates average entropy of all regions of size $RegionSize
+% V. 2.0
 
 % Entropy of region A is |A|-|G_A|, where |G_A| is the number of stabilizers supported on A (in clipped gauge)
 % Average Entropy = 1/N * (Sum of entropy for all N of the possible regions A, assuming periodic boundary conditions)
