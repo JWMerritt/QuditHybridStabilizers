@@ -1,4 +1,4 @@
-function [Out,LessThanFlag] = LengthDistribution(BigramsIn,SystemSize,GiveWarning)
+function [Out,LessThanFlag] = LengthDistributionAlt(BigramsIn,SystemSize,GiveWarning)
 %   Gives the distribution of lengths of a set of bigrams. Out(L) = number of stabilizers of length L.
 
 if nargin<3
