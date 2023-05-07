@@ -1,5 +1,7 @@
 function [SystemSizeValues,MeasurementProbabilityValues,InteractingProbabilityValues,TotalTimeSteps,Out,Realizations,sig,roughLimits] = ScellPullData(Scell,arg,roughLimit)
-%sig is std deviation; roughLimits is the number of times data was thrown due to being over the roughLimit
+% [SystemSizeValues,MeasurementProbabilityValues,InteractingProbabilityValues,TotalTimeSteps,Out,Realizations,sig,roughLimits] = ScellPullData(Scell,arg,roughLimit)
+% Pulls $arg data from a Scell cell
+%   sig is standard deviation; roughLimits is the number of times data was thrown due to being over the roughLimit
 
 if nargin==1
     if isequal(Scell,'info')
