@@ -1,5 +1,5 @@
 function [Out,LessThanFlag] = LengthDistribution(BigramsIn,SystemSize,GiveWarning)
-%   Gives the distribution of lengths of a set of bigrams. Out(L) = number of stabilizers of length L.
+%   Gives the distribution of lengths of a set of bigrams. Out(L) = number of stabilizers of length L. ### NOT NORMALIZED
 
 if nargin<3
     GiveWarning = false;
@@ -8,7 +8,7 @@ end
 [NumRows,NumColumns] = size(BigramsIn);
 
 if NumColumns~=2
-    ColErrStruct = struct('message','Error in LengthDistribution: Bigram does not have two columns. Make sure the input is a Bigram.','identifier','LengthDistribution:BigramColumnError');
+    ColErrStruct = struct('message','Error in LengthDistribution: Bigram list does not have two columns. Make sure the first input is a Bigram list.','identifier','LengthDistribution:BigramColumnError');
     error(ColErrStruct)
 end
 
@@ -41,6 +41,5 @@ elseif sum(Out)>SystemSize
     LessThanFlag = true;
     fprintf('\nWARNING: Total number of entries in LengthDistribution is MORE than system size!?\n')
 end
-
 
 end

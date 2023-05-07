@@ -1,27 +1,37 @@
 function Out = EntropyOfRegionSize(RegionSize,BigramIn,SystemSize)
 % Calculates average entropy of all regions of size $RegionSize
-% V. 2.0
+% V. 3.0
 
-% Entropy of region A is |A|-|G_A|, where |G_A| is the number of stabilizers supported on A (in clipped gauge)
-% Average Entropy = 1/N * (Sum of entropy for all N of the possible regions A, assuming periodic boundary conditions)
-% Sum of entropies = sum over A of (L - |G_A|) = NL - sum over A of (|G_A|)
-% Each generator g of length (l_g) is going to be supported in L-(l_g)+1 different regions of length L,
-%   as long as l_g < L
-% If there are K generators with $l_g <= L), then 
-%   sum over A of (|G_A|) = sum over g in generator group of (L - (l_g) + 1) = KL - sum over g of (l_g - 1).
-% Thus, for a pure or mixed state,
-% Average Entropy = 1/N * (NL - KL + sum over g (l_g - 1)) = 1/N*((N-K)L + sum over g (l_g - 1))
+% Entropy of region A is |A|-|G_A|, where |G_A| is the number of stabilizers supported on A (in clipped gauge).
+% If the region wraps around the system's endpoints, then we can find the entropy of A's complement.
+% This method should work for both pure and mixed states.
+% This is the most inelegant, brute force method I know, and I should have gone with this from the beginning...
 
 SiteBigrams = ceil(BigramIn/2);
-%   This gives the endpoints in terms of sites instead of operator indeces
-LengthsMinusOne = SiteBigrams(:,2)-SiteBigrams(:,1);
-%   This is actually length - 1
-SmallEnoughGenerators = LengthsMinusOne < RegionSize;
+Out = 0;
 
-LengthSum = sum(LengthsMinusOne.*SmallEnoughGenerators);
-NumSmallGenerators = sum(SmallEnoughGenerators);
 
-Out = 1/SystemSize*( (SystemSize-NumSmallGenerators)*RegionSize + LengthSum);
+% First, the properly contiguous regions
+NumRegions = SystemSize-RegionSize+1;
 
+for ii=1:NumRegions
+    EndpointsSupported = (SiteBigrams>=ii).*(SiteBigrams<=(ii+RegionSize-1));
+    NumberGenerators = sum(EndpointsSupported(:,1).*EndpointsSupported(:,2));
+    Out = Out + RegionSize - NumberGenerators;
+        % Add this region's entropy to the toal
 end
 
+
+% Then, the wrap-around regions
+ComplementSize = SystemSize-RegionSize;
+NumComplements = SystemSize-NumRegions;
+
+for ii=2:(NumComplements+1)
+    EndpointsSupported = (SiteBigrams>=ii).*(SiteBigrams<=(ii+ComplementSize-1));
+    NumberGenerators = sum(EndpointsSupported(:,1).*EndpointsSupported(:,2));
+    Out = Out + ComplementSize - NumberGenerators;
+end
+
+Out = Out/SystemSize;
+
+end
