@@ -1,5 +1,6 @@
 function Out = Scellerize(In)
-%changes Struct into a cell array, with a struct for each phase point.
+% Out = Scellerize(struct In)
+% Changes Data Struct into a cell array, with a struct for each phase point.
 
 EntryStruct = struct('SystemSize',[],'MeasurementProbability',[],'InteractingProbability',[],'TotalTimeSteps',[],'LengthDistribution',cell(1),'SubsystemEntropy',cell(1),'PurificationEntropy',cell(1),'Realizations',cell(1));
 Out = {};

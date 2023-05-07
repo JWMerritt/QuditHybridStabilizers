@@ -20,11 +20,13 @@ try
 	if FileID~=-1
 		fprintf('\nFile %s opened...\n',FilesFile)
 	else
-		fprintf('\n >> Error: %s could not be opened. Maybe the name is wrong?')
+		fprintf('\n >> Error: %s could not be opened. Maybe the name is wrong?',FilesFile)
+        Scell = {};
 		return
 	end
 catch
     frpintf('\nCouldn''t open file list.\n')
+    Scell = {};
     return
 end
 
