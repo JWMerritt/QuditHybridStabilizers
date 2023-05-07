@@ -1,5 +1,9 @@
-function Make_batch_sh(JobPath,JobName,CKPT_Name_Fullpath,Diary_Name_Fullpath,NodeTime,NodeMemory,Number_ParallelRealizations)
+function Make_batch_sh(sh_Folder,JobPath,JobName,CKPT_Name_Fullpath,Diary_Name_Fullpath,NodeTime,NodeMemory,Number_ParallelRealizations)
 %	sets up things for hyak. Is 'Parafermion' and 'Batch' specific.
+if nargin<=7
+    erstruct = struct('message','>> ERROR in Make_batch_sh: needs 8 inputs, not 7. Recently added sh_Folder as new input. To fix, start with Make_batch_sh(JobPath,JobPath,JobName,...)','identifier','Make_batch_sh:NotEnoughInputArguments');
+    error(erstruct)
+end
 
 RC = false;
 
@@ -8,7 +12,7 @@ if exist(cat(2,JobPath,'/ckpt_',JobName),'file')==2
     return
 end
 
-shNameFull = cat(2,JobPath,'/',JobName,'.sh')
+shNameFull = cat(2,sh_Folder,'/',JobName,'.sh')
 doneNameFull = cat(2,JobPath,'/ExitFiles/',JobName,'.done')
 fprintf(shNameFull)
 fprintf('\n')
