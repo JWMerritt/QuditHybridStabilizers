@@ -1,7 +1,14 @@
 function run_code(CKPT_Name_Fullpath,RunLocation,RC,Verbose)
-%	Do not add '.mat' to the end of ckptNameFull entry.
-%	This should be the full path name, starting from /mmfs1/gscratch/...
-%	>> Edit this locally (using git), then upload to hyak.
+% [] = run_code(CKPT_Name_Fullpath,RunLocation,RC,Verbose)
+%   The workhorse of hybrid stabilizer calculations. Loads a CKPT file, runs the calculations, saves the results.
+%   
+%   -  CKPT_Name_Fullpath = the full path name of the CKPT file. Do not add '.mat' to the end of this entry.
+%   -  RunLocation = a string saying what machine the code is being run on. Mostly here in order to make sure the directories line up.
+%       Options are: "klone_hyak", "Lenovo_Yoga", "ASRock_Desktop", "X51_Desktop".
+%   -  RC = bool of whether this is using the RunContainer profile (depreciated).
+%   -  Verbose = bool of whether to include additional information in the output text files.
+%	
+% >> Edit this function locally (using git), /then/ upload to hyak.
 
 RunVersion = 'PARA_1.1.1'
 SelfName = 'run_code'; % mostly for errors
@@ -840,7 +847,7 @@ while ~Complete
 					
 					StateArray = cell(Number_ParallelRealizations,1);
 					if Verbose; fprintf('.. Initializing StateArray'); end
-					for ii=1:Number_ParallelRealizations
+					for ii=1:Number_ParallelRealizationss
 						StateArray{ii} = struct('State',StartState,'Number_Generators',Number_Generators);
 					end
 					
@@ -859,8 +866,8 @@ while ~Complete
 				
 				
 						%%%%%%%%%%%%%%%%%%%%%%%%		%%%%%%%%%%%%%
-				fprintf('\n  Running circuit %d / %d, (%d Realization entries),\n    MeasurementProbability = %.3f,\n    InteractingProbability = %.3f,\n  current time: %.2d:%.2d...\n',RealizationsPerSystemSize_Counter,RealizationsPerSystemSize(SystemSize_Index),currentReals,MeasurementProbabilityValues(MeasurementProbability_Index),InteractingProbabilityValues(InteractingProbability_Index),c(4),c(5));
-				if Verbose; fprintf(' VV: (MeasurementProbability_Index,InteractingProbability_Index) = (%d,%d) VV ',MeasurementProbability_Index,InteractingProbability_Index); end 	%keep the trailing VV in this one.
+				fprintf('\n  Running circuit %d / %d, (%d Realization entries),\n    MeasurementProbability = %.3f   (%d/%d),\n    InteractingProbability = %.3f   (%d/%d),\n  current time: %.2d:%.2d...\n',RealizationsPerSystemSize_Counter,RealizationsPerSystemSize(SystemSize_Index),currentReals,MeasurementProbabilityValues(MeasurementProbability_Index),MeasurementProbability_Index,Number_MeasurementProbabilities,InteractingProbabilityValues(InteractingProbability_Index),InteractingProbability_Index,Number_InteractingProbabilities,c(4),c(5));
+				%if Verbose; fprintf(' VV: (MeasurementProbability_Index,InteractingProbability_Index) = (%d,%d) VV ',MeasurementProbability_Index,InteractingProbability_Index); end 	%keep the trailing VV in this one.
 						%%%%%%%%%%%%%%%%%%%%%%%%		%%%%%%%%%%%%%
 				
 				
@@ -989,8 +996,8 @@ while ~Complete
 										currentsize = size(Current_State);
 										%fprintf('\nsumsum of current state: %d, size: [%d, %d], generators: %d', sum(sum(abs(Current_State))),currentsize(1),currentsize(2),par_NumGenerators)
 
-										par_Bigram = Bigrams(Clip(Current_State,Hdim,IsPure),par_NumGenerators)
-										currentsize = size(par_Bigram)
+										par_Bigram = Bigrams(Clip(Current_State,Hdim,IsPure),par_NumGenerators);
+										currentsize = size(par_Bigram);
 										%fprintf(', bigram size: [%d, %d]',currentsize(1),currentsize(2))
 
 										%fprintf('\n [%d, ] \n',par_Bigram(1,1))
@@ -1769,20 +1776,19 @@ end
 %	fixed the "all-zero matrices getting passed" issue... 
 %** Updated to ver. 2.03.
 
-%{
 
-24/Feb/2023 - Updated the code to work with my 'Parafermion' project. I don't know 
-	how much parafermion action it'll actually get, though, but I like the format
-	better. Requires less of me remembering what each variable is.
-25/Feb/2023 - It seems to be working well enough. Gonna dump this onto klone and
-	hope for the best!
-03/Mar/2023 - Fixed a major error in the code, in which I never clipped the state
-	before finding the bigrams...
-14/Mar/2023 - The Free-versus-Interacting project for March Meeting failed, but
-	I updated the code to be able to run bosons now, which can be flagged
-	in RunOpitons by 'StatisticsType' = 'Fermionic' or 'Bosonic'. Defaults to 
-	Fermionic whenever 'StatisticsType' is not defined in RunOptions.
-		I'm also looking towards publishing this code on GitHub, so I took the
-	main() code and put it back into the main part of the function.
-	
-%}
+%24/Feb/2023 - Updated the code to work with my 'Parafermion' project. I don't know
+%	how much parafermion action it'll actually get, though, but I like the format
+%	better. Requires less of me remembering what each variable is.
+%25/Feb/2023 - It seems to be working well enough. Gonna dump this onto klone and
+%	hope for the best!
+%03/Mar/2023 - Fixed a major error in the code, in which I never clipped the state
+%	before finding the bigrams...
+%14/Mar/2023 - The Free-versus-Interacting project for March Meeting failed, but
+%	I updated the code to be able to run bosons now, which can be flagged
+%	in RunOpitons by 'StatisticsType' = 'Fermionic' or 'Bosonic'. Defaults to 
+%	Fermionic whenever 'StatisticsType' is not defined in RunOptions.
+%		I'm also looking towards publishing this code on GitHub, so I took the
+%	main() code and put it back into the main part of the function.
+%07/May/2023 - Added help code to the front of the function, and changed the 
+%   normal output to include the Measurement/Interacting indices.
