@@ -1,10 +1,12 @@
-function Out = BosonSymplectic(Hdim)
-%makes random 4x4 Clifford symplectic in C' representation.
-%with Pauli operators written as column vectors
+function MatrixOut = SystemSymplecticBoson(Hdim)
+% MatrixOut = SystemSymplecticBoson(Hdim)
+% Uses symplectic Gram-Schmidt orthonormalization to make a random 4x4 symplectic matrix modulo Hdim.
 
 %v1.5
 
 %{
+
+This algorithm is based on 
     Pseudocode:
 start with standard basis, 4x4 identity matrix
 pick random vector mod d; v
@@ -109,7 +111,7 @@ end
 C1 = single([1,0,0,0;0,1,0,0;0,0,0,0;0,0,0,0]) + kron(single([0,0;0,1]),random2d(Hdim));
     %makes random C1 matrix and puts it into the form eye(2)(+)C1
 Kf = mod(Kf*C1,Hdim);
-Out=Kf;
+MatrixOut=Kf;
 end
 
 
