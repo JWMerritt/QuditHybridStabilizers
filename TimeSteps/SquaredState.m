@@ -1,5 +1,15 @@
 function Psi = SquaredState(SystemSize,C_Numbers_Int,Hdim,UnitaryFunc,RunOptions,S_Metric)
-%   Makes a trivial state with [SystemSize] sites, and evolves it by [SystemSize] timesteps.
+%SQUAREDSTATE  Make a trivial state and evolve for a number of times equal to the system size.
+%
+%   Psi = SQUAREDSTATE(SystemSize,C_Numbers,Hdim,UnitaryFunc,RunOption,S_Metric) makes a trivial state with (SystemSize) sites, and evolves it by (SystemSize) timesteps.
+%   -- C_Numbers_Int is the list of numbers corresonding to (symplectic) Clifford matrices for the corresponding value of Hdim.
+%   -- Hdim is the on-site Hilbert space dimension (number of qudit states).
+%   -- UnitaryFunc is the unitary function to apply during each time step.
+%   -- RunOptions is the struct containing the details of the evolution applied.
+%   -- S_Metric is the symplectic metric corrsponding to the system.
+%       
+%   See also UNITARYBOSONBASIC, SYSTEMSYMPLECTICBOSON
+
 
 try
     IsPure = RunOptions.PureState;

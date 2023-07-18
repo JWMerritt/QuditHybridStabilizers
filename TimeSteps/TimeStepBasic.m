@@ -1,9 +1,21 @@
 function  [Psi,NumGenerators] = TimeStepBasic(Psi,NumGenerators,C_Numbers_Int,Hdim,UnitaryFunc,RunOptions,S_Metric)
-%   Applies one time step, with periodic BC, alternating each step.
-%   Measurements follow the pairings of the unitaries just applied.
+%TIMESTEPBASIC  Apply a time step to a system.
+%
+%   [Psi,NumGenerators] = TIMESTEPBASIC(Psi,NumGenerators,C_Numbers_Int,Hdim,UnitaryFunc,RunOptions,S_Metric) applies one time step to Psi using periodic (closed) boundary conditions and returns the resulting state.
+%   -- NumGenerators is the number of nonzero generators in Psi.
+%   -- C_Numbers_Int is the list of numbers corresonding to (symplectic) Clifford matrices for the corresponding value of Hdim.
+%   -- Hdim is the on-site Hilbert space dimension (number of qudit states).
+%   -- UnitaryFunc is the unitary function to apply during each time step.
+%   -- RunOptions is the struct containing the details of the evolution applied.
+%   -- S_Metric is the symplectic metric corrsponding to the system.
+%
+%   Applies one time step, with periodic boundary conditions. Applies two layers of unitaries and measurements, with alternate pairings for the distinct layers.
+%   Measurements are in line with the pairings of the unitaries applied immediately before them.
+%   E.g., unitary gates and then measurements on (1,2), (3,4), ... then on (2,3), (4,5), ...
 %
 %   Requires: RunOptions.MeasurementProbability
-%   Expects an Lx2L check-matrix, with an even number of sites L.
+%   -- This number must be between 0 and 1 inclusive, and determines the probability of a measurment occuring at each pairing for each layer.
+%   Expects Psi to be an Nx2N check-matrix, with an even number of sites N.
 %   Fermion specific, as measurements can happen between sites
 
 
@@ -11,7 +23,6 @@ function  [Psi,NumGenerators] = TimeStepBasic(Psi,NumGenerators,C_Numbers_Int,Hd
 if NumColumns~=2*NumRows
     fprintf("Error in TimeStep(): Input state not correct size.\n")
     fprintf(' - Input size: [%d, %d]. Needs to be [L, 2L].\n', NumRows, NumColumns)
-    %Out = [];
     return
 end
 
@@ -19,7 +30,6 @@ NumPairs = NumRows/2;
 
 if floor(NumPairs)~=NumPairs
     fprintf("Error in TimeStep(): We can only handle systems withan even number of sites.")
-    %Out = [];
     return
 end
 
@@ -38,7 +48,6 @@ Num_C_Numbers = numel(C_Numbers_Int);
 %   Unitaries: %%%%%%%%%%%%%%
 
 Psi = UnitaryFunc(Psi,NumColumns,C_Numbers_Int,Hdim,RunOptions,0);
-
 
 %   Measurement: %%%%%%%%%%%
 
@@ -84,9 +93,6 @@ for IterativeSiteIndex=MeasurementSites
     [Psi,NumGenerators] = Measure(Psi,NumGenerators,IterativeSiteIndex,Hdim,NumRows,NumColumns,S_Metric);
     %   has inputs Measure(Psi,ColumnIndex,Hdim,NumRows,NumColumns,S_Metric)
 end
-
-% and that should be all!
-
 
 end
 
