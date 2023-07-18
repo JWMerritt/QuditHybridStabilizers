@@ -1,4 +1,4 @@
-function Out = ScellCombine(In1,In2)
+function Out = DCellCombine(In1,In2)
 %   Expects Normalized Scells
 
 %EntryStruct = struct('N',[],'p',[],'q',[],'t',[],'S',cell(1),'ns',cell(1),'reals',cell(1));

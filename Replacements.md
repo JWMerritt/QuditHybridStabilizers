@@ -7,4 +7,5 @@ Measure | MeasureMajorana
 Smetric | SymplecticMecticMajorana
 SmetricBoson | SymplecticMetricBoson
 SProd | SymplecticProduct
-Scell | DCell
+Scell* | DCell*
+Scellerize | DCellConvert

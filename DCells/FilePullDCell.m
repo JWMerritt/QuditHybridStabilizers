@@ -1,4 +1,4 @@
-function [Scell,successes,failures] = FilePullScell(FilesFile,RelDir)
+function [DCOut,successes,failures] = FilePullDCell(FilesFile,RelDir)
 % For Parafermion jobs. Reads a text file with the relevent file names, and tries to pull data from them all. Returns names that it couldn't load.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -21,12 +21,12 @@ try
 		fprintf('\nFile %s opened...\n',FilesFile)
 	else
 		fprintf('\n >> Error: %s could not be opened. Maybe the name is wrong?',FilesFile)
-        Scell = {};
+        DCOut = {};
 		return
 	end
 catch
     frpintf('\nCouldn''t open file list.\n')
-    Scell = {};
+    DCOut = {};
     return
 end
 
@@ -36,7 +36,7 @@ fprintf('\nNames collected...')
 
 fprintf('\nFiles Directory: %s',RelDir)
 
-Scell = {};
+DCOut = {};
 failures = {};
 successes = {};
 BKUP = {};
@@ -49,7 +49,7 @@ for ii=1:numel(Names)
                 % the filesize will throw an error
         else
             loadTries = 0;
-            scellTries = 0;
+            dcellTries = 0;
             bts = dir(cat(2,RelDir,Names{ii},'.mat')).bytes; % 'dir' is more persnickety, and needs the folder directory
             fprintf('\n  %s  [ %.1f Kb ] ... ',Names{ii},bts/1000)
             while loadTries<4
@@ -58,32 +58,32 @@ for ii=1:numel(Names)
                     fprintf('loaded...')
                     loadTries = 10; 		% we successfully loaded the file!
                     for jj = 1:numel(Load.Out)	% one point per Out is so common, I forgot that this could happen!
-                        scellTries = 0;
+                        dcellTries = 0;
                         if numel(Load.Out(jj).PurificationEntropy)==0
                             fprintf('Data empty.')
-                            failures{numel(failures)+1} = Names{ii};
+                            failures{end+1} = Names{ii};
                         else
-                            while scellTries<4  % let's pull the Scell
+                            while dcellTries<4  % let's pull the DCell
                                 try
-                                    Scell = ScellAppend(Scell,Load.Out(jj));
+                                    DCell = DCellAppend(DCell,Load.Out(jj));
                                     if jj==1
-                                        fprintf("Scell'd.")
+                                        fprintf("Converted.")
                                     else
                                         fprintf(',(%d)',jj)
                                     end
-                                    scellTries = 10; 	% we successfully pulled the data!
+                                    dcellTries = 10; 	% we successfully pulled the data!
                                     if jj==1
-                                        successes{numel(successes)+1} = Names{ii};
+                                        successes{end+1} = Names{ii};
                                     end
-                                catch ScellFail
-                                    fprintf('\nfailed to Scellerize...')
-                                    fprintf('\n  ~~  %s',ScellFail.identifier)
-                                    fprintf('\n  ~~  "%s"',ScellFail.message)
+                                catch DCellFail
+                                    fprintf('\nfailed to convert...')
+                                    fprintf('\n  ~~  %s',DCellFail.identifier)
+                                    fprintf('\n  ~~  "%s"',DCellFail.message)
                                     fprintf('\n 	Trying again...')
-                                    scellTries = scellTries + 1;
+                                    dcellTries = dcellTries + 1;
                                     pause(0.5)
-                                    if scellTries>=4	% we failed to pull the data... try the first backup, later
-                                        BKUP{numel(BKUP)+1}=Names{ii};
+                                    if dcellTries>=4	% we failed to pull the data... try the first backup, later
+                                        BKUP{end+1}=Names{ii};
                                     end
                                 end
                             end
@@ -93,14 +93,14 @@ for ii=1:numel(Names)
                     if loadTries<10
                         fprintf('load failed...')
                         loadTries = loadTries + 1;
-                    else 	% else an error was thrown while trying to Scellerize
-                        fprintf('\n >>: error thrown while trying to Scellerize...')
+                    else 	% else an error was thrown while trying to convert to DCell
+                        fprintf('\n >>: error thrown while trying to converting to DCell...')
                         fprintf('\n ~~ %s',LoadEr.identifier)
                         fprintf('\n ~~ %s',LoadEr.message)
                     end
                     pause(1)	% give the system some time to compose itself...
                     if loadTries>=4		% we've failed to load the file... try the first backup, later
-                        BKUP{numel(BKUP)+1}=Names{ii};
+                        BKUP{end+1}=Names{ii};
                     end
                 end
             end
@@ -126,25 +126,25 @@ for ii=1:numel(BKUP)
 				fprintf('Data empty.')
 			else
 				try
-					Scell = ScellAppend(Scell,Load.Out);
+					DCell = DCellAppend(DCell,Load.Out);
 					if jj==1
-						fprintf("Scell'd.")
+						fprintf("Converted.")
 					else
 						fprintf(',(%d)',jj)
 					end
-					successes{numel(successes)+1} = BKname;
-					BKUPsucc{numel(BKUPsucc)+1} = BKname;
-				catch ScellFail
-                    fprintf('\n  %s failed to Scellerize.',cat(2,BKUP{ii},'__BKUP_A'))
-                    fprintf('\n  ~~  %s',ScellFail.identifier)
-                    fprintf('\n  ~~  "%s"',ScellFail.message)
+					successes{end+1} = BKname;
+					BKUPsucc{end+1} = BKname;
+				catch DCellFail
+                    fprintf('\n  %s failed to convert.',cat(2,BKUP{ii},'__BKUP_A'))
+                    fprintf('\n  ~~  %s',DCellFail.identifier)
+                    fprintf('\n  ~~  "%s"',DCellFail.message)
                     fprintf('\n 	Trying again...')
-					failures{numel(failures)+1}=BKUP{ii};
+					failures{end+1}=BKUP{ii};
 				end
 			end
 		end
     catch
-        failures{numel(failures)+1}=BKUP{ii};
+        failures{end+1}=BKUP{ii};
 		fprintf('\n    %s failed to load.',cat(2,BKUP{ii},'__BKUP_A'))
     end
 end

@@ -1,7 +1,6 @@
 classdef DCell
     properties
         Cell
-        Attributes
     end
     methods
 
@@ -9,16 +8,12 @@ classdef DCell
             if nargin==0
                 input_data = {};
             end
-            obj.Cell = obj.StructToDCell(input_data);
+            %input_data
+            obj.Cell = obj.Struct2DCell(input_data);
             obj.Attributes = obj.index();
         end
 
-        function indices = index(obj)
-            list = cell2mat(obj.Cell);
-            [~,indices] = sort(list);
-        end
-
-        function Out = StructToDCell(struct_in)
+        function Out = Struct2DCell(obj,struct_in)
             TrivStruct = struct('SystemSize',[],'MeasurementProbability',[],'InteractingProbability',[],'TotalTimeSteps',[],'LengthDistribution',cell(1),'SubsystemEntropy',cell(1),'PurificationEntropy',cell(1),'Realizations',cell(1));
             Out = {};
             skip = false;
@@ -70,6 +65,10 @@ classdef DCell
                     end
                 end
             end
+        end
+
+        function Out = Append(obj,DC2)
+            
         end
 
     end
