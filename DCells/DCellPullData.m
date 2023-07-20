@@ -1,99 +1,67 @@
-function [SystemSizeValues,MeasurementProbabilityValues,InteractingProbabilityValues,TotalTimeSteps,Out,Realizations,sig,roughLimits] = ScellPullData(Scell,arg,roughLimit)
-% [SystemSizeValues,MeasurementProbabilityValues,InteractingProbabilityValues,TotalTimeSteps,Out,Realizations,sig,roughLimits] = ScellPullData(Scell,arg,roughLimit)
-% Pulls $arg data from a Scell cell
-%   sig is standard deviation; roughLimits is the number of times data was thrown due to being over the roughLimit
+function [SystemSizeValues,MeasurementProbabilityValues,InteractingProbabilityValues,TotalTimeSteps,Out,Realizations,STD] = DCellPullData(Dcell,ARG)
+%DCELLPULLDATA  Collect the data from a DCell and convert it into arrays
+%  for plotting / manipulation / etc.
+%
+%   [SystemSizeValues,MeasurementProbabilityValues,...
+%     InteractingProbabilityValues,TotalTimeSteps,Out,...
+%     Realizations,STD] = DCELLPULLDATA(In,ARG) extracts and averages the
+%   ARG data (ARG = 'LengthDistribution', 'SubsystemEntropy', or 'PurificationEntropy'),
+%   then organizes the results into double arrays.
+%   Out is a cell array of ARG values.
+%   STD is a double array of standard deviations in the values at each point.
 
-if nargin==1
-    if isequal(Scell,'info')
-        fprintf('\n -- [SystemSizeValues,MeasurementProbabilityValues,InteractingProbabilityValues,TotalTimeSteps,Out,Realizations,sig,roughLimits] = ScellPullData(Scell,arg,roughLimit)\n')
-        return
-    end
-end
-if nargin<3
-	roughLimit = inf;
-end
 if nargin<2
-    arg = 'LengthDistribution';
+    ErSrct = struct('message','Argument missing from input.','identifier','DCellPullData:MissingArgument');
+    error(ErSrct)
 end
 
-
-
-if ~iscell(Scell)
-    if isstruct(Scell)
-        fprintf('ERROR: Input is struct. Remember to Scellerize inputs.\n')
-        return
+if ~iscell(Dcell)
+    if isstruct(Dcell)
+        ErSrct = struct('Input is a struct. Remember to convert structs to DCells.','identifier','DCellPullData:InputIsStruct');
+        error(ErSrct)
     else
-        fprintf('ERROR: Expecting input to be cell array.\n')
+        ErSrct = struct('Input must be a DCell.','identifier','DCellPullData:InputIsNotCell');
+        error(ErSrct)
     end
 end
+
 
 SystemSizeValues=[];
 MeasurementProbabilityValues=[];
 InteractingProbabilityValues=[];
 TotalTimeSteps=[];
 Out={};
-sig=[];
+STD=[];
 Realizations=[];
-roughLimits = [];
 
+for entry_idx=1:numel(Dcell)
+    SystemSizeValues(entry_idx) = Dcell{entry_idx}.SystemSize;
+    MeasurementProbabilityValues(entry_idx) = Dcell{entry_idx}.MeasurementProbability;
+    InteractingProbabilityValues(entry_idx) = Dcell{entry_idx}.InteractingProbability;
+    TotalTimeSteps(entry_idx) = Dcell{entry_idx}.TotalTimeSteps;
+    Current_ARGData_cell = getfield(Dcell{entry_idx},ARG);   % This should give us the cell array we're looking for...
+    %   It will be a single value in the case of PurificationEntropy, and a column matrix for LengthDistribution / SubsystemEntropy
 
+    Current_ArgData_numel = numel(Current_ARGData_cell);
+    Realizations(entry_idx) = Current_ArgData_numel;
+        % Notice that we don't check the value of the Realizations{i} entries,
+        % we just expect them all to be 1. If not, then the standard deviation
+        % calculation will be incorrect.
+    ArgData_Cumulative = Current_ARGData_cell{1};
 
-for IterativeScellEntryIndex=1:numel(Scell)
-
-    ArgData_CurrentScellEntry = getfield(Scell{IterativeScellEntryIndex},arg);   %should give us the cell array we're looking for
-    %   This will be a single value in the case of PurificationEntropy, and a column matrix for LengthDistribution / SubsystemEntropy
-
-    SystemSizeValues(IterativeScellEntryIndex)=Scell{IterativeScellEntryIndex}.SystemSize;
-    MeasurementProbabilityValues(IterativeScellEntryIndex)=Scell{IterativeScellEntryIndex}.MeasurementProbability;
-    InteractingProbabilityValues(IterativeScellEntryIndex)=Scell{IterativeScellEntryIndex}.InteractingProbability;
-    TotalTimeSteps(IterativeScellEntryIndex)=Scell{IterativeScellEntryIndex}.TotalTimeSteps;
-
-
-    %{
-    holdReals = 0;
-    holdArg = 0;
-    entries = numel(Current); 	%note: replace this loop with cell2mat() & sum() in the future...
-
-    for jj=1:entries
-        holdArg(jj) = Current{jj};
-        if numel(Scell{ii}.Realizations)~=0
-            holdReals(jj) = Scell{ii}.Realizations{jj};
-        end
+    for ArgData_idx=2:Current_ArgData_numel
+        ArgData_Cumulative = ArgData_Cumulative + Current_ARGData_cell{ArgData_idx};
+        %   We force all Realizations{i}=1 so that we can do the variance calculation.
     end
 
-        % RoughLimit code: keep only the values below roughLimit
-    keptOnes = holdArg<roughLimit;
-    finalArg = holdArg(keptOnes);
-    finalReals = holdReals(keptOnes);
-    roughLimits(ii) = entries - sum(keptOnes);
-    %}
+    FinalArgOut = ArgData_Cumulative/Current_ArgData_numel;
+    Out{entry_idx} = FinalArgOut;
 
-    Number_Data_in_Current_Arg = numel(ArgData_CurrentScellEntry);
-    Realizations(IterativeScellEntryIndex) = Number_Data_in_Current_Arg;
-    ArgOutCurrent = ArgData_CurrentScellEntry{1};
-    %Realizations_Counter = Scell{IterativeScellEntryIndex}.Realizations{1};
-
-    for IterativeArgEntryIndex=2:Number_Data_in_Current_Arg
-        ArgOutCurrent = ArgOutCurrent + ArgData_CurrentScellEntry{IterativeArgEntryIndex};
-        %   We force all Realizations=1 so that we can do the variance calculation.
+    Variance_Cumulative = (FinalArgOut - Current_ARGData_cell{1}).^2;
+    for jj=2:Current_ArgData_numel
+        Variance_Cumulative = Variance_Cumulative + (FinalArgOut - Current_ARGData_cell{jj}).^2;
     end
-
-    FinalArgOut = ArgOutCurrent/Number_Data_in_Current_Arg;
-    Out{IterativeScellEntryIndex} = FinalArgOut;
-
-    %{
-    if numel(Scell{IterativeScellEntryIndex}.Realizations)~=0
-        Realizations(IterativeScellEntryIndex) = sum(finalReals);
-    end
-    holdVar = [];
-    %}
-    
-    VarianceBuffer = (FinalArgOut - ArgData_CurrentScellEntry{1}).^2;
-    for jj=2:Number_Data_in_Current_Arg
-        VarianceBuffer = VarianceBuffer + (FinalArgOut - ArgData_CurrentScellEntry{jj}).^2;
-    end
-    sig{IterativeScellEntryIndex} = sqrt(VarianceBuffer/(Number_Data_in_Current_Arg-1));
-
+    STD{entry_idx} = sqrt(Variance_Cumulative/(Current_ArgData_numel-1));
 
 end
 

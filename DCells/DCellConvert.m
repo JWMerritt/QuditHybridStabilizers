@@ -1,111 +1,86 @@
-function Out = Scellerize(In)
-% Out = Scellerize(struct In)
-% Changes Data Struct into a cell array, with a struct for each phase point.
+function Out = DCellConvert(In)
+%DCELLCONVERT  Convert a struct of data into a DCell cell array.
+%
+%   A DCell is the term for a cell array, where each entry is a struct that
+%   contains the data corresponding a particular set of independent values.
+%
+%   Out = DCELLCONVERT(In) converts the struct In into an array of cells 
+%   (a DCell array), where each entry holds the data corresponding to one 
+%   value of the independent variables (SystemSize,InteractingProbability,
+%   MeasurementProbability,TotalTimeSteps).
+%
+%   This function does not combine data for entries with 
+%   the same independent variables.
+%   This function does not order the entries.
+%
+%   The input structure is expected to be a struct of any size,
+%   where each entry has the following fields and data types:
+%       SystemSize - 1x1 double
+%       MeasurementProbability - 1x1 double
+%       InteractingProbability - 1x1 double
+%       TotalTimeSteps - 1x1 double
+%       LengthDistribution - Nx1 cell of Mx1 doubles
+%       SubsystemEntropy - Nx1 cell of Mx1 doubles
+%       PurificationEntropy Nx1 cell  of 1x1 doubles
+%       Realizations - Nx1 cell of 1x1 doubles
 
-EntryStruct = struct('SystemSize',[],'MeasurementProbability',[],'InteractingProbability',[],'TotalTimeSteps',[],'LengthDistribution',cell(1),'SubsystemEntropy',cell(1),'PurificationEntropy',cell(1),'Realizations',cell(1));
+EmptyStruct = struct('SystemSize',[],'MeasurementProbability',[],...
+    'InteractingProbability',[],'TotalTimeSteps',[],...
+    'LengthDistribution',cell(1),'SubsystemEntropy',cell(1),...
+    'PurificationEntropy',cell(1),'Realizations',cell(1));
 Out = {};
-skip = false;
 
-for ii=1:numel(In)
-    skip = false;
-        %now, we check if In(ii) actually has any data
-    if numel(In(ii).SystemSize)==0
-        skip = true;
+for in_idx=1:numel(In)
+    skip_entry = false;
+        % First, we check if In(in_idx) actually has any data
+
+    if numel(In(in_idx).SystemSize)==0
+        skip_entry = true;
     end
-    if ~isequal(class(In(ii).SubsystemEntropy),'cell')  %mostly here in case ns=[] instead of ns={[]}
-        skip = true;
-    elseif numel(In(ii).SubsystemEntropy{1})==0
-        skip = true;
+
+    if ~isequal(class(In(in_idx).SubsystemEntropy),'cell')  
+        % This is here because sometimes the entry will be an array of 
+        % doubles instead of a cell array
+        skip_entry = true;
+    elseif numel(In(in_idx).SubsystemEntropy{1})==0
+        skip_entry = true;
     end
+
     if isfield(In,'LengthDistribution')
-        if ~isequal(class(In(ii).LengthDistribution),'cell')
-            skip = true;
-        elseif numel(In(ii).LengthDistribution{1})==0
-            skip = true;
+        if ~isequal(class(In(in_idx).LengthDistribution),'cell')
+            skip_entry = true;
+        elseif numel(In(in_idx).LengthDistribution{1})==0
+            skip_entry = true;
         end
     end
-    if ~skip        %just place entries into the cell, no duplicate-checking
-        Out{numel(Out)+1} = EntryStruct;
-        Os = numel(Out);
-        Out{Os}.SystemSize = In(ii).SystemSize;
-        Out{Os}.MeasurementProbability = In(ii).MeasurementProbability;
-        Out{Os}.InteractingProbability = In(ii).InteractingProbability;
-        Out{Os}.SubsystemEntropy = In(ii).SubsystemEntropy;
+
+    if ~skip_entry        % Add another entry
+        Out{end+1} = EmptyStruct;
+        Out{end}.SystemSize = In(in_idx).SystemSize;
+        Out{end}.MeasurementProbability = In(in_idx).MeasurementProbability;
+        Out{end}.InteractingProbability = In(in_idx).InteractingProbability;
+        Out{end}.SubsystemEntropy = In(in_idx).SubsystemEntropy;
         if isfield(In,'TotalTimeSteps')
-            Out{Os}.TotalTimeSteps = In(ii).TotalTimeSteps;
+            Out{end}.TotalTimeSteps = In(in_idx).TotalTimeSteps;
         else
-            Out{Os}.TotalTimeSteps = [];
+            Out{end}.TotalTimeSteps = [];
         end
         if isfield(In,'LengthDistribution')
-            Out{Os}.LengthDistribution = In(ii).LengthDistribution;
+            Out{end}.LengthDistribution = In(in_idx).LengthDistribution;
         else
-            Out{Os}.LengthDistribution = {};
+            Out{end}.LengthDistribution = {};
         end
         if isfield(In,'PurificationEntropy')
-            Out{Os}.PurificationEntropy = In(ii).PurificationEntropy;
+            Out{end}.PurificationEntropy = In(in_idx).PurificationEntropy;
         else
-            Out{Os}.PurificationEntropy = {};
+            Out{end}.PurificationEntropy = {};
         end
         if isfield(In,'Realizations')
-            Out{Os}.Realizations = In(ii).Realizations;
+            Out{end}.Realizations = In(in_idx).Realizations;
         else
-            Out{Os}.Realizations = {};
+            Out{end}.Realizations = {};
         end
     end
 end
-
-
-
-%{
-
-%%%% OLD_DATA
-
-EntryStruct = struct('N',[],'p',[],'q',[],'t',[],'S',cell(1),'ns',cell(1),'reals',cell(1));
-Out = {};
-skip = false;
-
-for i=1:numel(In)
-    skip = false;
-        %now, we check if In(i) actually has any data
-    if numel(In(i).N)==0
-        skip = true;
-    end
-    if ~isequal(class(In(i).ns),'cell')  %mostly here in case ns=[] instead of ns={[]}
-        skip = true;
-    elseif numel(In(i).ns{1})==0
-        skip = true;
-    end
-    if isfield(In,'S')
-        if ~isequal(class(In(i).S),'cell')
-            skip = true;
-        elseif numel(In(i).S{1})==0
-            skip = true;
-        end
-    end
-    if ~skip        %just place entries into the cell, no duplicate-checking
-        Out{numel(Out)+1} = EntryStruct;
-        Os = numel(Out);
-        Out{Os}.N = In(i).N;
-        Out{Os}.p = In(i).p;
-        Out{Os}.q = In(i).q;
-        Out{Os}.ns = In(i).ns;
-        if isfield(In,'t')
-            Out{Os}.t = In(i).t;
-        else
-            Out{Os}.t = [];
-        end
-        if isfield(In,'S')
-            Out{Os}.S = In(i).S;
-        else
-            Out{Os}.S = {};
-        end
-        if isfield(In,'reals')
-            Out{Os}.reals = In(i).reals;
-        else
-            Out{Os}.reals = {};
-        end
-    end
-end
-%}
 
 end

@@ -1,7 +1,12 @@
 function Out = GenerateStabilizerGroup(In,Hdim)
-%   A VERY COSTLY function that takes a generating set [In] and generates the entire stabilizer group from it.
-%   If [In] has N generators, the stabilizer group will be a (Hdim^N)-by-2L matrix!
-%   !! Assumes [Hdim] is a prime number.
+%GENERATESTABILIZERGROUP  Generate the stabilizer group given a generating set.
+%
+%   Out = GENERATESTABILIZERGROUP(G,Hdim) A VERY COSTLY function that takes
+%   a generating set G and generates the entire stabilizer group from it.
+%   If G has N generators, the stabilizer group will be a (Hdim^N)-by-2N
+%   matrix! 
+% 
+%   -- Hdim is assumed to be a prime number.
 
 [NumRows,NumColumns] = size(In)
 

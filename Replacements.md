@@ -1,5 +1,12 @@
 The renaming conventions I'm using:
 
+**Stages:**
+ - Make the code more readable.
+    - Rename certain functions and variables
+    - Add documentation and clarifying comments
+ - Move C_Numbers_Int into RunOptions to place more emphasis on the bosonic features.
+
+## New Names 
 
  Old name | New name
 ---|---

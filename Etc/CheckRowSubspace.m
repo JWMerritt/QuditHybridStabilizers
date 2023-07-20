@@ -1,17 +1,25 @@
 function Out = CheckRowSubspace(In1,In2,Hdim,PrintOutput)
-%   A function that, by brute force, checks if the span of one set of row vectors is contained in the span of the other.
+%CHECKROWSUBSPACE  Check if the span of the row vectors of one matrix is contained in another matrix.
+%
+%   Out = CHECKROWSUBSPACE(A,B,Hdim) checks if every row vector of B is
+%   equal to some linear combination of the row vectors in A i.e., if
+%   span(B) is a subset of span(A). This is a very sloppy code that just
+%   checks is by brute force, but it's sometimes helpful for small tests.
 %   Specifically, if span(In2) is a subspace of span(In1).
-%   It does this by generating elements of the full vector subspace for [In1], 
-%     and then checking to see if the (basis) vectors of [In2] are contained within it.
 %
-%   The original purpose was to see if two generating sets were equivalent - if they generate the same stabilizer group,
-%     then they span the same subset, and so span(In2) \subset span(In1) and span(In1) \subset span(In2).
-%     If size(In2)==size(In1) and all vectors are independent of others in the same set, then 
-%     span(In2) \subset span(In1) iff span(In2)==span(In1), since they have the same dimension.
-%     So we can still use this function in this way.
+%   -- Hdim is assumed to be a prime number
 %
-%   !! Assumes [Hdim] is a prime number.
-%   !! Assumes [In1], [In2] are already modulo Hdim.
+%   -- A and B are assumed to be matrices with the same number of columns,
+%   and only contain integers [0,...,Hdim].
+%
+%
+%   The original purpose was to see if two generating sets were equivalent
+%   - if they generate the same stabilizer group, then they span the same
+%   subset, and so span(In2) \subset span(In1) and span(In1) \subset
+%   span(In2). If size(In2)==size(In1) and all vectors are independent of
+%   others in the same set, then span(In2) \subset span(In1) iff
+%   span(In2)==span(In1), since they have the same dimension. So we can
+%   still use this function in this way.
 
 if nargin<4
     PrintOutput = false;

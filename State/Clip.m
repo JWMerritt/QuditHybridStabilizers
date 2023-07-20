@@ -1,4 +1,8 @@
 function Out = Clip(In,Hdim,PureState)
+%CLIP  Convert a generating set into the clipped gauge.
+%
+%   OUT = CLIP(IN,HDIM,PURE_STATE) returns a generating set OUT which generates the same stabilizer group (rowspace) as IN, but in the clipped gauge.
+%
     %puts matrix 'In' into the clipped gauge, mod d. Expecting an 2LxL matrix with columns describing the operators in the Pauli string, already modulo d.
     
     %works with the operators as columns, as it seems to improve
@@ -58,7 +62,7 @@ pseudocode
     end
 
     
-    IterativeColumnIndex=1; IterativeRowIndex=1;  %Row and Column indicators
+    col_idx=1; row_idx=1;  %Row and Column indicators
     CurrentOutRowIndex = 1;     % current row that we're copying In(RowFoundIndex) to
     RowFoundIndex=0;                     %RowIndex = 0 means it found no row with nonzero leading entry
     inverse=0;                      %mod-inverse of a leading power
@@ -69,15 +73,15 @@ pseudocode
     
     checklist = ones(NumRows,1,'single');
 
-    for IterativeColumnIndex=1:NumColumns
+    for col_idx=1:NumColumns
 
         RowFoundIndex=0;
-        for IterativeRowIndex=1:NumRows
+        for row_idx=1:NumRows
 
-            if checklist(IterativeRowIndex)  %find nonzero starting entry
-                if mod(In(IterativeRowIndex,IterativeColumnIndex),Hdim)~=0
+            if checklist(row_idx)  %find nonzero starting entry
+                if mod(In(row_idx,col_idx),Hdim)~=0
 
-                    RowFoundIndex=IterativeRowIndex;
+                    RowFoundIndex = row_idx;
                     break
 
                 end
@@ -86,15 +90,15 @@ pseudocode
         end
 
         if RowFoundIndex
-            inverse = ModInverse(In(RowFoundIndex,IterativeColumnIndex),Hdim);
+            inverse = ModInverse(In(RowFoundIndex,col_idx),Hdim);
             Out(CurrentOutRowIndex,:) = mod(inverse*In(RowFoundIndex,:),Hdim);    %row Out(CurrentOutRowIndex,:) now leads with 1
 
-            for IterativeRowIndex=(RowFoundIndex+1):NumRows  %only search these, because we know the higher ones have zero leading entries
+            for row_idx=(RowFoundIndex+1):NumRows  %only search these, because we know the higher ones have zero leading entries
 
-                if checklist(IterativeRowIndex)
-                    if mod(In(IterativeRowIndex,IterativeColumnIndex),Hdim)~=0
+                if checklist(row_idx)
+                    if mod(In(row_idx,col_idx),Hdim)~=0
 
-                        In(IterativeRowIndex,:) = mod(In(IterativeRowIndex,:)-In(IterativeRowIndex,IterativeColumnIndex)*Out(CurrentOutRowIndex,:),Hdim);
+                        In(row_idx,:) = mod(In(row_idx,:)-In(row_idx,col_idx)*Out(CurrentOutRowIndex,:),Hdim);
                         %   The first entry of Out(CurrentOutRowIndex) row is 1.
                         %   We multiply to get an independent generator with the same content as In(IterativeRowIndex,:) in the column IterativeColumnIndex.
                         %   We can then subtract them to make the In(IterativeRowIndex,:) entry in IterativeColumnIndex vanish.
@@ -126,15 +130,15 @@ pseudocode
     %CurrentOutRowIndex=NumRows;
     checklist = ones(NumRows,1,'single');
 
-    for IterativeColumnIndex=NumColumns:-1:1   %decrease from 2*L to 1
+    for col_idx=NumColumns:-1:1   %decrease from 2*L to 1
 
         RowFoundIndex=0;
-        for IterativeRowIndex=NumRows:-1:1           %order very important here; leftmost generators are at the top of the list
+        for row_idx=NumRows:-1:1           %order very important here; leftmost generators are at the top of the list
 
-            if checklist(IterativeRowIndex) %find nonzero starting entry, starting at bottom
-                if mod(Out(IterativeRowIndex,IterativeColumnIndex),Hdim)~=0
+            if checklist(row_idx) %find nonzero starting entry, starting at bottom
+                if mod(Out(row_idx,col_idx),Hdim)~=0
 
-                    RowFoundIndex=IterativeRowIndex;
+                    RowFoundIndex=row_idx;
                     break
 
                 end
@@ -144,7 +148,7 @@ pseudocode
 
         if RowFoundIndex
 
-            inverse = ModInverse(Out(RowFoundIndex,IterativeColumnIndex),Hdim);
+            inverse = ModInverse(Out(RowFoundIndex,col_idx),Hdim);
             Out(RowFoundIndex,:) = mod(inverse*Out(RowFoundIndex,:),Hdim);    %row RowIndex now leads with 1
             %   We don't move the row to another matrix, because the order of the rows now matters - 
             %   The rows are ordered by right endpoint, and we should only add rows to the rows above them, to preserve this ordering.
@@ -152,11 +156,11 @@ pseudocode
             %   Note that we can't generally order the rows by both left _and_ right endpoint. So, we still have to check all the rows every time - 
             %   we can't skip rows below the one we found, in later loops.
 
-            for IterativeRowIndex=(RowFoundIndex-1):-1:1    %only search these;
+            for row_idx=(RowFoundIndex-1):-1:1    %only search these;
                 %   the lower rows have zero leading entries, since they didn't trigger the above loop.
-                if checklist(IterativeRowIndex) && mod(Out(IterativeRowIndex,IterativeColumnIndex),Hdim)~=0
+                if checklist(row_idx) && mod(Out(row_idx,col_idx),Hdim)~=0
 
-                    Out(IterativeRowIndex,:) = mod(Out(IterativeRowIndex,:)-Out(IterativeRowIndex,IterativeColumnIndex)*Out(RowFoundIndex,:),Hdim);
+                    Out(row_idx,:) = mod(Out(row_idx,:)-Out(row_idx,col_idx)*Out(RowFoundIndex,:),Hdim);
 
                 end
             end

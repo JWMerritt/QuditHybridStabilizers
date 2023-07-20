@@ -1,40 +1,62 @@
 function [DCOut,successes,failures] = FilePullDCell(FilesFile,RelDir)
-% For Parafermion jobs. Reads a text file with the relevent file names, and tries to pull data from them all. Returns names that it couldn't load.
-%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%FILEPULLDCELL  Pull the struct data from a list of .mat files, convert them
+% to DCells, and combine them in to one.
+%
+%   [DCellOut,SuccessfulLoads,FailedLoads] = FILEPULLDCELL(FILE) opens
+%   FILE, reads the file names in FILE, loads the file names as .mat files,
+%   converts the data inside into DCells, and outputs the combined DCell as
+%   DCellOut.
+%
+%   -- FILE is expected to be a plain text document with a list of file
+%   names which are to be loaded. Each entry is a file name "X" (without
+%   .mat extension), entries are separated by a newline character, and the
+%   list contains no other whitespace. An entry can be ignored by starting
+%   the line with the "#" character. The entry "X" loads the file
+%   "./DATA/X.mat". If the file cannot be loaded, the backup file
+%   "./DATA/X__BKUP_A.mat" is automatically attempted instead. (Note there
+%   are two underscores after the file name.) The file is searched for the
+%   variable "Out", which is expected to be a struct containing data. This
+%   struct is converted a DCell, and combined with the DCells from the
+%   other files into DCellOut.
+%   
+%   -- SuccessfulLoads is a cell array containing the names of the files
+%   which were successfully loaded and converted to DCell.
+%   
+%   -- FailedLoads is a cell array containing the names of the files which
+%   were not successfully loaded and converted to DCell, either due to a
+%   failure to load, or because the file contained no data.
+%   
+%   [DCellOut,SuccessfulLoads,FailedLoads] = FILEPULLDCELL(FILE,RELDIR)
+%   uses the relative directory RELDIR to load files from "RELDIR/X.mat"
+%   instead of defaulting to "./DATA".
 
-		%  Assumes bare filename, without '.mat' extension, for BKUP handling
-        %  Expects to be executed from within the Job folder, with the files to be
-        %   pulled inside a DATA folder; this is determined by RelDir.
-        %   Furthermore, the folders need to be in the MATLAB path.
-		
-%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 if nargin<2
-    RelDir = './DATA/';	% Remember, Hyak's Linux uses '/', while Windows uses '\' or '/'.
+    RelDir = './DATA/';
 else
     RelDir = cat(2,RelDir,'/');
 end
+
+fprintf('\nFiles Directory: %s',RelDir)
 
 try
     FileID = fopen(FilesFile);
 	if FileID~=-1
 		fprintf('\nFile %s opened...\n',FilesFile)
-	else
-		fprintf('\n >> Error: %s could not be opened. Maybe the name is wrong?',FilesFile)
+    else
         DCOut = {};
-		return
+		ErMsg = sprintf('File %s could not be opened. Maybe the name is wrong?',FilesFile);
+        ErSrct = struct('message',ErMsg,'identifier','FilePullDCell:UnableToOpenFile');
+        error(ErSrct)
 	end
-catch
-    frpintf('\nCouldn''t open file list.\n')
+catch OpenError
     DCOut = {};
-    return
+    error(OpenError)
 end
 
 C = textscan(FileID,'%s');
 Names = C{1};
 fprintf('\nNames collected...')
-
-fprintf('\nFiles Directory: %s',RelDir)
 
 DCOut = {};
 failures = {};
@@ -45,8 +67,7 @@ for ii=1:numel(Names)
 	if Names{ii}(1)~='#' %this allows us to `comment' out a name by putting a `#' in front of it in the Files-file.
         if exist(cat(2,RelDir,Names{ii},'.mat'),'file')~=2
             fprintf('\n >> %s.mat Does not exist.',Names{ii})
-                % if the file doesn't exist, the code that tries to find
-                % the filesize will throw an error
+                % If the file doesn't exist, the code that tries to find the filesize will throw an error, so we stop here.
         else
             loadTries = 0;
             dcellTries = 0;
@@ -54,25 +75,27 @@ for ii=1:numel(Names)
             fprintf('\n  %s  [ %.1f Kb ] ... ',Names{ii},bts/1000)
             while loadTries<4
                 try
-                    Load = load(cat(2,RelDir,Names{ii}),'Out');   % as long as we're in the Job folder, we don't need the folder name or path
+                    CurrentLoad = load(cat(2,RelDir,Names{ii}),'Out');   % As long as we're in the Job folder, we don't need the folder name or path
                     fprintf('loaded...')
                     loadTries = 10; 		% we successfully loaded the file!
-                    for jj = 1:numel(Load.Out)	% one point per Out is so common, I forgot that this could happen!
+                    for Out_entry_idx = 1:numel(CurrentLoad.Out)	% one point per Out is so common, I forgot that this could happen!
                         dcellTries = 0;
-                        if numel(Load.Out(jj).PurificationEntropy)==0
+                        if (numel(CurrentLoad.Out(Out_entry_idx).PurificationEntropy)==0)...
+                                ||(numel(CurrentLoad.Out(Out_entry_idx).LengthDistribution)==0)...
+                                ||(numel(CurrentLoad.Out(Out_entry_idx).SubsystemEntanglement)==0)
                             fprintf('Data empty.')
                             failures{end+1} = Names{ii};
                         else
                             while dcellTries<4  % let's pull the DCell
                                 try
-                                    DCell = DCellAppend(DCell,Load.Out(jj));
-                                    if jj==1
+                                    DCOut = DCellAppend(DCOut,CurrentLoad.Out(Out_entry_idx));
+                                    if Out_entry_idx==1
                                         fprintf("Converted.")
                                     else
-                                        fprintf(',(%d)',jj)
+                                        fprintf(',(%d)',Out_entry_idx)
                                     end
                                     dcellTries = 10; 	% we successfully pulled the data!
-                                    if jj==1
+                                    if Out_entry_idx==1
                                         successes{end+1} = Names{ii};
                                     end
                                 catch DCellFail
@@ -93,7 +116,7 @@ for ii=1:numel(Names)
                     if loadTries<10
                         fprintf('load failed...')
                         loadTries = loadTries + 1;
-                    else 	% else an error was thrown while trying to convert to DCell
+                    else 	% else the file was loaded successfully, bu an error was thrown while trying to convert to DCell.
                         fprintf('\n >>: error thrown while trying to converting to DCell...')
                         fprintf('\n ~~ %s',LoadEr.identifier)
                         fprintf('\n ~~ %s',LoadEr.message)
@@ -119,18 +142,20 @@ for ii=1:numel(BKUP)
 		BKname = cat(2,BKUP{ii},'__BKUP_A');
 		bts = dir(cat(2,RelDir,BKname,'.mat')).bytes;
 		fprintf('\n  %s  [ %.1f Kb ] ... ',BKname,bts/1000)
-        Load = load(BKname,'Out');
+        CurrentLoad = load(BKname,'Out');
 		fprintf('loaded...')
-		for jj=1:numel(Load.Out)
-			if numel(Load.Out(jj).PurificationEntropy)==0
+		for Out_entry_idx=1:numel(CurrentLoad.Out)
+			if (numel(CurrentLoad.Out(Out_entry_idx).PurificationEntropy)==0)...
+                    ||(numel(CurrentLoad.Out(Out_entry_idx).LengthDistribution)==0)...
+                    ||(numel(CurrentLoad.Out(Out_entry_idx).SubsystemEntanglement)==0)
 				fprintf('Data empty.')
 			else
 				try
-					DCell = DCellAppend(DCell,Load.Out);
-					if jj==1
+					DCOut = DCellAppend(DCOut,CurrentLoad.Out);
+					if Out_entry_idx==1
 						fprintf("Converted.")
 					else
-						fprintf(',(%d)',jj)
+						fprintf(',(%d)',Out_entry_idx)
 					end
 					successes{end+1} = BKname;
 					BKUPsucc{end+1} = BKname;
@@ -150,7 +175,7 @@ for ii=1:numel(BKUP)
 end
 
 
-fprintf('\n  Backups:')
+fprintf('\n  Backups loaded:')
 if numel(BKUPsucc)==0
 	fprintf('\n    none.')
 else
