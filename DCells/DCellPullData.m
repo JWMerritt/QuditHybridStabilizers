@@ -2,13 +2,15 @@ function [SystemSizeValues,MeasurementProbabilityValues,InteractingProbabilityVa
 %DCELLPULLDATA  Collect the data from a DCell and convert it into arrays
 %  for plotting / manipulation / etc.
 %
-%   [SystemSizeValues,MeasurementProbabilityValues,...
-%     InteractingProbabilityValues,TotalTimeSteps,Out,...
-%     Realizations,STD] = DCELLPULLDATA(In,ARG) extracts and averages the
+%   [SystemSizeValues, MeasurementProbabilityValues, ...
+%     InteractingProbabilityValues, TotalTimeSteps, OUT, ...
+%     Realizations, STD] = DCELLPULLDATA(IN, ARG) extracts and averages the
 %   ARG data (ARG = 'LengthDistribution', 'SubsystemEntropy', or 'PurificationEntropy'),
 %   then organizes the results into double arrays.
-%   Out is a cell array of ARG values.
-%   STD is a double array of standard deviations in the values at each point.
+%
+%   -- OUT is a cell array of ARG values.
+%
+%   -- STD is a double array of standard deviations in the values at each point.
 
 if nargin<2
     ErSrct = struct('message','Argument missing from input.','identifier','DCellPullData:MissingArgument');

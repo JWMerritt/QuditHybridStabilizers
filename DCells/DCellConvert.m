@@ -4,7 +4,7 @@ function Out = DCellConvert(In)
 %   A DCell is the term for a cell array, where each entry is a struct that
 %   contains the data corresponding a particular set of independent values.
 %
-%   Out = DCELLCONVERT(In) converts the struct In into an array of cells 
+%   OUT = DCELLCONVERT(IN) converts the struct IN into an array of cells 
 %   (a DCell array), where each entry holds the data corresponding to one 
 %   value of the independent variables (SystemSize,InteractingProbability,
 %   MeasurementProbability,TotalTimeSteps).

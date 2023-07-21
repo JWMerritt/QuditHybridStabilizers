@@ -1,7 +1,7 @@
 function Out = Bigrams(In,NumGenerators)
 %BIGRAMS  Find the bigrams (endpoints) of a set of generators.
 %
-%   Out = Bigrams(G,NUM_GENERATORS) calculates the list of bigrams of the
+%   OUT = Bigrams(G, NUM_GENERATORS) calculates the list of bigrams of the
 %   generators in G.
 %
 %   -- G is a N-by-2N matrix of integers with NUM_GENERATORS nonzero rows. G

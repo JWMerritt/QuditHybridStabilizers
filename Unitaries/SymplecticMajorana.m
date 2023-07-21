@@ -1,4 +1,4 @@
-function [MatrixOut,EvenNumOfSites] = SystemSymplecticMajorana(NumSites,C_Numbers_Hdim,Hdim,Offset)
+function [Out, EvenNumOfSites] = SymplecticMajorana(C_Numbers_Hdim, Hdim, NumSites, Offset)
 % [MatrixOut,EvenNumOfSites] = SystemSymplecticMajorana(NumSites,C_Numbers_Hdim,Hdim,Offset)
 % MatrixOut is a symplectic matrix which is the direct sum of 4x4 symplectic matrices. Uses periodic boundary conditions.
 % EvenNumOfSites is true if NumSites is even, false if NumSites is odd.
@@ -8,24 +8,29 @@ function [MatrixOut,EvenNumOfSites] = SystemSymplecticMajorana(NumSites,C_Number
 
 Num_C_Numbers = numel(C_Numbers_Hdim);
 
+if nargin<3
+    NumSites = 1;
+end
+if nargin<4
+    Offset = 0;
+end
+
 NumPairs = floor(NumSites/2);
 
 EvenNumOfSites = (NumPairs==NumSites/2);
 %   This will return false if there are an odd number of sites.
 
-MatrixOut = speye(2*NumSites);
+Out = speye(2*NumSites);
 
 for PairIndex = 0:NumPairs-2
-    
     RandNum = randi([1,Num_C_Numbers]);
     SymplecticLocal = CliffordSymplecticMajorana(C_Numbers_Hdim(RandNum),Hdim);
-    ColumnIndex = 4*PairIndex+2*Offset;
-    MatrixOut(ColumnIndex+1:ColumnIndex+4, ColumnIndex+1:ColumnIndex+4) = SymplecticLocal;
-
+    ColumnIndex = 4*PairIndex;
+    Out(ColumnIndex+1:ColumnIndex+4, ColumnIndex+1:ColumnIndex+4) = SymplecticLocal;
 end
 
 
-
+%{
 PairIndex = NumPairs-1;
 
 if (Offset==0)||(~EvenNumOfSites)
@@ -35,7 +40,7 @@ if (Offset==0)||(~EvenNumOfSites)
     RandNum = randi([1,Num_C_Numbers]);
     SymplecticLocal = CliffordSymplecticMajorana(C_Numbers_Hdim(RandNum),Hdim);
     ColumnIndex = 4*PairIndex+2*Offset;
-    MatrixOut(ColumnIndex+1:ColumnIndex+4, ColumnIndex+1:ColumnIndex+4) = SymplecticLocal;
+    Out(ColumnIndex+1:ColumnIndex+4, ColumnIndex+1:ColumnIndex+4) = SymplecticLocal;
 
 
 elseif (Offset==1)&&(EvenNumOfSites)
@@ -46,13 +51,15 @@ elseif (Offset==1)&&(EvenNumOfSites)
     RandNum = randi([1,Num_C_Numbers]);
     SymplecticLocal = mod(-diag([-1,-1,1,1])*CliffordSymplecticMajorana(C_Numbers_Hdim(RandNum),Hdim)*diag([1,1,-1,-1]),Hdim);
     Indices = [2*NumSites-1, 2*NumSites, 1,2];
-    MatrixOut(Indices,Indices) = SymplecticLocal;
+    Out(Indices,Indices) = SymplecticLocal;
 
 else
 
     fprintf("Error in GetSystemSymplectic() : Offset must be equal to 0 or 1.\n")
 
 end
+%}
 
+Out = circshift(circshift(Out,2*Offset,1),2*Offset,2);
 
 end

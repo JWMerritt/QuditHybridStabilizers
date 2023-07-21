@@ -11,8 +11,12 @@ The renaming conventions I'm using:
  Old name | New name
 ---|---
 Measure | MeasureMajorana
-Smetric | SymplecticMecticMajorana
+Smetric | SymplecticMetricMajorana
 SmetricBoson | SymplecticMetricBoson
 SProd | SymplecticProduct
 Scell* | DCell*
 Scellerize | DCellConvert
+TimeStepBasic | TimeStepMajoranaBasic
+TimeStepBosonic | TimeStepBosonBasic
+SystemSymplecticBoson / BosonSymplectic | SymplecticBoson
+SystemSymplecticMajorana | SymplecticMajorana

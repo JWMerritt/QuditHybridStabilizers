@@ -1,7 +1,7 @@
 function Out = DCellOrder(In)
 %DCELLORDER  Order the contents of the DCell by independent variable.
 %
-%   Out = DCellOrder(In) orders the entries of In by increasing value of
+%   OUT = DCellOrder(IN) orders the entries of In by increasing value of
 %   the independent variables, in the following order of significance:
 %       SystemSize
 %       ProbabilityValue

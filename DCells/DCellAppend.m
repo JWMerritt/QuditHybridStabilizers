@@ -1,10 +1,10 @@
 function Augend = DCellAppend(Augend,Addend)
 %DCELLAPPEND  Append one DCell to another
 %
-%   A = DCELLAPPEND(A,B) appends B to DCell A.
+%   A = DCELLAPPEND(A, B) appends B to DCell A.
 %   -- B can be either a DCell or a struct.
 %
-%   A = DCELLAPPEND({},B) converts struct B to DCell and then orders the entries.
+%   A = DCELLAPPEND({}, B) converts struct B to DCell and then orders the entries.
 %
 %   See DCELLCONVERT
 

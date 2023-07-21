@@ -2,7 +2,7 @@ function [DCOut,successes,failures] = FilePullDCell(FilesFile,RelDir)
 %FILEPULLDCELL  Pull the struct data from a list of .mat files, convert them
 % to DCells, and combine them in to one.
 %
-%   [DCellOut,SuccessfulLoads,FailedLoads] = FILEPULLDCELL(FILE) opens
+%   [DCellOut, SuccessfulLoads, FailedLoads] = FILEPULLDCELL(FILE) opens
 %   FILE, reads the file names in FILE, loads the file names as .mat files,
 %   converts the data inside into DCells, and outputs the combined DCell as
 %   DCellOut.
@@ -26,7 +26,7 @@ function [DCOut,successes,failures] = FilePullDCell(FilesFile,RelDir)
 %   were not successfully loaded and converted to DCell, either due to a
 %   failure to load, or because the file contained no data.
 %   
-%   [DCellOut,SuccessfulLoads,FailedLoads] = FILEPULLDCELL(FILE,RELDIR)
+%   [DCellOut, SuccessfulLoads, FailedLoads] = FILEPULLDCELL(FILE, RELDIR)
 %   uses the relative directory RELDIR to load files from "RELDIR/X.mat"
 %   instead of defaulting to "./DATA".
 

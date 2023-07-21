@@ -1,6 +1,6 @@
 function Out = DCellCombine(In1,In2)
 %DCELLCOMBINE  Combine two DCells into one.
-%   Out = DCELLCOMBINE(A,B) combines two DCells A and B into one DCell.
+%   OUT = DCELLCOMBINE(A, B) combines two DCells A and B into one DCell.
 %
 %   This function combines data for entries with 
 %   the same independent variables.
