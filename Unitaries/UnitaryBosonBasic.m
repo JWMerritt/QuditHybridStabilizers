@@ -1,8 +1,8 @@
-function [Psi,S] = UnitaryBosonBasic(Psi,NumColumns,C_Numbers_Int,Hdim,RunOptions,Offset)
+function [Psi,S] = UnitaryBosonBasic(Psi,NumColumns,~,Hdim,~,Offset)
 %UNITARYBOSONBASIC  Apply random two-site Clifford unitary gates across an
 % entire system.
 %
-%   PSI = UNITARYBOSONBASIC(PSI, NUM_COLS, [], HSIM, [], OFFSET)
+%   PSI = UNITARYBOSONBASIC(PSI, NUM_COLS, ~, HSIM, ~, OFFSET)
 %
 %   PSI = UNITARYBOSONBASIC(PSI, NUM_COLS, CLIFF_NUMS, HDIM, RUNOPTIONS,
 %   OFFSET) creates a syplectic matrix corresponding to two-site unitary
@@ -35,13 +35,13 @@ function [Psi,S] = UnitaryBosonBasic(Psi,NumColumns,C_Numbers_Int,Hdim,RunOption
     
     for PairIndex = 0:NumPairs-2
     
-        S_Local = SymplecticBoson(Hdim);
+        S_Local = PairSymplecticBoson(Hdim);
         ColumnIndex = 4*PairIndex+2*Offset;
         S(ColumnIndex+1:ColumnIndex+4, ColumnIndex+1:ColumnIndex+4) = S_Local;
     
     end
     
-    S_Local = SystemSymplecticBoson(Hdim);
+    S_Local = PairSymplecticBoson(Hdim);
     
     if Offset==0
         Indices = NumColumns-3:NumColumns;

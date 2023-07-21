@@ -5,11 +5,11 @@ function StateOut = TrivStateBoson(NumSites, SiteEigenoperator)
 %   state - a state which is the tensor product of bosons, each of which is
 %   an eigenstate of the Pauli Z oeprator.
 %
-%   OUT = TRIVSTATEBOSON(N, SITE_EIGEN) creates a state which is a tensor
-%   product of bosons which are each an eigenstate of the SITE_EIGEN
+%   OUT = TRIVSTATEBOSON(N, EIGENOPERATOR) creates a state which is a tensor
+%   product of bosons which are each an eigenstate of the EIGENOPERATOR
 %   operator.
 %
-%   SITE_EIGEN = [a,b] is the row of integers which corresponds to the
+%   EIGENOPERATOR = [a,b] is the row of integers which corresponds to the
 %   operator X^a Z^b.
 
 StateOut = zeros(NumSites,2*NumSites);

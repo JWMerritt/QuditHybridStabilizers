@@ -5,7 +5,7 @@ function RunBatch(CKPT_Name_Fullpath,JobName,Diary_Name_Fullpath)
 
 Verbose = false;
 
-fprintf('\n B: Starting RunBatch.')
+fprintf('\n RB: Starting RunBatch.')
 fprintf('\n Date: %s', datetime("now"))
 fprintf('\n Parallel information:')
 feature('numcores');
@@ -13,15 +13,15 @@ fprintf('\n ========\n Starting cluster with ''%s'' profile.', JobName)
 
 MyCluster = parcluster(JobName)
 
-fprintf('\n B: Deleting all old jobs on this cluster...')
+fprintf('\n RB: Deleting all old jobs on this cluster...')
 
 delete(MyCluster.Jobs)
 
-fprintf('\n B: Batching run_code...')
+fprintf('\n RB: Batching run_code...')
 
 RunJob = batch(MyCluster,'run_code',0,{CKPT_Name_Fullpath,'klone_hyak',RC,Verbose})
 
-fprintf('\n B: Printing diary...')
+fprintf('\n RB: Printing diary...')
 
 Diary_Fullname_Fullpath = cat(2,Diary_Name_Fullpath,'.diary')
 
@@ -42,6 +42,6 @@ while ~isequal(RunJob.Tasks(1).State,'finished')
     diary(RunJob,Diary_Fullname_Fullpath);
 end
 
-fprintf('\n B: batch_code ended. Task State = finished...')
+fprintf('\n RB: RunBatch ended. Task State = finished...')
 
 end

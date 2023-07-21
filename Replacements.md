@@ -13,12 +13,16 @@ The renaming conventions I'm using:
 Measure | MeasureMajorana
 Smetric | SymplecticMetricMajorana
 SmetricBoson | SymplecticMetricBoson
-SProd | SymplecticProduct
+SProd | SProdB / SProdM
 Scell* | DCell*
 Scellerize | DCellConvert
 TimeStepBasic | TimeStepMajoranaBasic
 TimeStepBosonic | TimeStepBosonBasic
-SystemSymplecticBoson / BosonSymplectic | SymplecticBoson
+SystemSymplecticBoson / BosonSymplectic | PairSymplecticBoson
 SystemSymplecticMajorana | SymplecticMajorana
 batch_code | RunBatch
 run_code(<br>CKPT_Name_Fullpath,<br>RunLocation='klone_hyak'<br>\*RC=false, \*Verbose=false) | QuditStateEvol(<br>CKPT_Name_Fullpath,<br>RunLocation='mmfs1/home/...',<br>\*Verbose=false)
+RealizationsPerSystemSize | CircuitsPerSystemSize
+RealizationsBeforeSaving | TimeStepsBeforeSaving
+Number_ParallelRealizations | Number_ParallelStates
+make_batch_ckpts | Make_Jobs

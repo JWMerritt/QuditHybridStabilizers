@@ -9,10 +9,10 @@ function StateOut = TrivStateMajorana(NumSites,SiteEigenoperator)
 %   It is good practice to first set this matrix to be modulo Hdim for the
 %   specific parafermion dimension before using it in any other functions.
 %
-%   OUT = TRIVSTATEBOSON(N, SITE_EIGEN) creates a state in which each site
-%   i is an eigenstate of the SITE_EIGEN operator.
+%   OUT = TRIVSTATEBOSON(N, EIGENOPERATOR) creates a state in which each site
+%   i is an eigenstate of the EIGENOPERATOR operator.
 %
-%   SITE_EIGEN = [a,b] is the row of integers which corresponds to the
+%   EIGENOPERATOR = [a,b] is the row of integers which corresponds to the
 %   operator $(\gamma_i)^a (\gamma_{i+1})^b$.
 
 StateOut = zeros(NumSites,2*NumSites);

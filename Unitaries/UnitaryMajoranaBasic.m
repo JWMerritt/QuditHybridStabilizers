@@ -1,8 +1,8 @@
-function StateOut = UnitaryMajoranaBasic(StateIn,NumColumns,C_Numbers_Hdim,Hdim,RunOptions,Offset)
+function StateOut = UnitaryMajoranaBasic(StateIn,NumColumns,C_Numbers_Hdim,Hdim,~,Offset)
 %UNITARYMAJORANABASIC  Apply random two-site Clifford unitary gates across an
 % entire system.
 %
-%   PSI = UNITARYMAJORANABASIC(PSI, NUM_COLS, CLIFF_NUMS, HSIM, [], OFFSET)
+%   PSI = UNITARYMAJORANABASIC(PSI, NUM_COLS, CLIFF_NUMS, HSIM, ~, OFFSET)
 %
 %   PSI = UNITARYMAJORANABASIC(PSI, NUM_COLS, CLIFF_NUMS, HDIM, RUNOPTIONS,
 %   OFFSET) creates a syplectic matrix corresponding to two-site unitary
