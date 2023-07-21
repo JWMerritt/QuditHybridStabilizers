@@ -1,11 +1,17 @@
 function Out = Number2Mat(In,Hdim,L)
-%   Basically converts 'In' into the decimal representation of a base-Hdim number (little-endian).
-%   L is the number of columns in the output, and can be any number larger than the original sequence the number came from.
+%NUMBER2MAT  Express a decimal number in base HDIM, with digits as the
+% entries of a row matrix.
+%
+%   OUT = NUMBER2MAT(IN, HDIM, L) takes the decimal number IN, calculates the
+%   digits when the number is represented in base HDIM, and places the
+%   digits into a row matrix of size L (little-endian).
+%
+%   See also STATEENCODE, STATEDECODE
 
-Out = zeros(1,L);
-for ii=1:L
-    Out(ii) = mod(In,Hdim);
-    In = (In-Out(ii))/Hdim;
-end
+    Out = zeros(1,L);
+    for ii=1:L
+        Out(ii) = mod(In,Hdim);
+        In = (In-Out(ii))/Hdim;
+    end
 
 end

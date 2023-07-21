@@ -1,8 +1,17 @@
 function Out = Mat2Number(In,Hdim)
-%   Basically takes a row matrix, and thinks of it as being the digits of a base-Hdim number (little-endian). We find this number.
-%   Hdim should be larger than any of the entries in In, otherwise we won't be able to decode uniquely.
-%   Length of In should be small enough that MATLAB can get all of the info into double-precision. 
-%       (approx L < 52*log(2)/log(Hdim))
+%MAT2NUMBER  Compress a matrix of integers into a number.
+%
+%   OUT = MAT2NUMBER(IN, HDIM) basically takes a row matrix, thinks of it
+%   as being the digits of a base-Hdim number (little-endian), and
+%   calculates this number in base-10.
+%
+%   HDIM should be larger than any of the entries in In (i.e. In should be
+%   modulo HDIM), otherwise we won't be able to decode uniquely.
+%
+%   Length of In should be small enough that MATLAB can get all of the info
+%   into double-precision. (approximately, this means L < 52*log(2)/log(Hdim))
+%
+%   See also STATEENCODE, STATEDECODE
 
 L = numel(In);
 

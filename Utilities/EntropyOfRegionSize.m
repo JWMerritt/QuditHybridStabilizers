@@ -1,6 +1,24 @@
 function Out = EntropyOfRegionSize(RegionSize,BigramIn,SystemSize)
-% Calculates average entropy of all regions of size $RegionSize
-% V. 3.0
+%ENTROPYOFREGIONSIZE  Find the average subsystem entanglement entropy of
+% all regions that have a certain size. Works for both pure and mixed
+% states of both bosons (qudits) and parafermions.
+%
+%   OUT = ENTORPYOFREGIONSIZE(L, BIGRAMS, N) finds the subsystem
+%   entanglement entropy of all regions of size L and returns their
+%   average. Periodic boundary conditions are used, and regions which wrap
+%   around the periodic boundary are included in the average.
+%
+%   -- BIGRAMS is the list of bigrams a state, calculated from the
+%   generators of the state in the clipped gauge.
+%
+%   -- N is the number of sites in the system.
+%
+%   For more information on the mathematics involved, see:
+%       https://doi.org/10.1103/PhysRevB.100.134306
+%       https://doi.org/10.1103/PhysRevA.71.042315
+%       https://doi.org/10.1016/j.physleta.2013.12.009
+%       
+%   See also BIGRAMS, CLIP
 
 % Entropy of region A is |A|-|G_A|, where |G_A| is the number of stabilizers supported on A (in clipped gauge).
 % If the region wraps around the system's endpoints, then we can find the entropy of A's complement.

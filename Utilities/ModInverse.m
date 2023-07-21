@@ -1,4 +1,11 @@
 function Out = ModInverse(In,d)
+%MODINVERSE  Calculate the multiplicative inverse modulo some integer.
+%
+%   OUT = MODINVERSE(IN, D) gives the multiplicative inverse of IN, modulo
+%   D. This is mainly its own function because gcd(IN, D) gives the same
+%   result but seems slow sometimes. MODINVERSE simply looks up the answer
+%   from a table of answers for small values of HDIM.
+
 % gives multiplicative inverse of 'In' modulo 'd'
 % mainly here because the gcd() approach eats a lot of computation time
 
@@ -70,5 +77,3 @@ else
 end
 
 end
-        
-    

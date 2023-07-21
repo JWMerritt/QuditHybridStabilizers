@@ -1,22 +1,19 @@
-function batch_code(CKPT_Name_Fullpath,JobName,Diary_Name_Fullpath)
+function RunBatch(CKPT_Name_Fullpath,JobName,Diary_Name_Fullpath)
 %   sets up the cluster, then batches run_code.
 
 %fprintf('\nEntered batch_code\n')
 
 Verbose = false;
-RC = false;
 
-c = clock;
-
-fprintf('\n B: Starting batch_code.')
-fprintf('\n Date: %.4d/%.2d/%.2d, %.2d:%.2d',c(1),c(2),c(3),c(4),c(5))
-fprintf('\nStarting cluster with ''%s'' profile.\n\n........\n',JobName)
-
-feature('numcores')
+fprintf('\n B: Starting RunBatch.')
+fprintf('\n Date: %s', datetime("now"))
+fprintf('\n Parallel information:')
+feature('numcores');
+fprintf('\n ========\n Starting cluster with ''%s'' profile.', JobName)
 
 MyCluster = parcluster(JobName)
 
-fprintf('\n B: Deleting old jobs...')
+fprintf('\n B: Deleting all old jobs on this cluster...')
 
 delete(MyCluster.Jobs)
 

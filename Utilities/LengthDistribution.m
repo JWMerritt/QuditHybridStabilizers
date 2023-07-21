@@ -1,4 +1,20 @@
 function [Out,LessThanFlag] = LengthDistribution(BigramsIn,SystemSize,GiveWarning)
+%LENGTHDISTRIBUTION  Find the distribution of stabilizers as a function of
+% stabilizer length.
+%
+%   OUT = LENGTHDISTRIBUTION(BIGRAMS, N) returns the length distribution of
+%   the stabilizers described by BIGRAMS.
+%   >> Note that this length distribution includes both endpoints of the
+%   stabilizer in the stabilizer's length, which is not the most common
+%   convention, cf. https://doi.org/10.1103/PhysRevB.100.134306 .
+%   >> Note that this length distribution is not normalized - it gives the
+%   number of stabilizers, not the fraction.
+%
+%   -- BIGRAMS is the list of bigrams a state, calculated from the
+%   generators of the state in the clipped gauge.
+%
+%   -- N is the number of sites in the system.
+
 %   Gives the distribution of lengths of a set of bigrams. Out(L) = number of stabilizers of length L. ### NOT NORMALIZED
 
 if nargin<3

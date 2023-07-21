@@ -1,4 +1,13 @@
-function Out = SMetric(NumSites,IsSingle)
+function Out = SymplecticMetricMajorana(NumSites,IsSingle)
+%SYMPLECTICMETRICMAJORANA  Create a symplectic metric for the generating
+% set of a system of Majorana parafermions
+%
+%   OUT = SYMPLECTICMETRICMAJORANA(N) creates the symplectic metric for a
+%   system of N parafermions using the Majorana operator representation.
+
+
+
+
 % gives the (size)x(size) symplectic metric
 
 if nargin<2

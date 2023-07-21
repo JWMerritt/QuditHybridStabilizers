@@ -1,4 +1,11 @@
 function Out = StateDecode(In,Hdim,NumColumns)
+%STATEDECODE  Convert a cell of numbers into a generator matrix.
+%
+%   OUT = STATEDECODE(IN, HDIM) converts a cell of numbers which was
+%   encoded using StateEncode back into a matrix of integers modulo HDIM.
+%
+%   See also STATEENCODE, NUMBER2MAT
+
 %   Decodes the mess we made with StateEncode.
 
 [NumRows,NumCellColumns] = size(In);

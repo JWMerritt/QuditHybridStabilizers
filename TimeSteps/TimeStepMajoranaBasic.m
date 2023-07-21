@@ -10,7 +10,7 @@ function  [Psi, NumGenerators] = TimeStepMajoranaBasic(Psi, NumGenerators, C_Num
 %   -- NUM_GENS is the number of nonzero generators in PSI.
 %
 %   -- CLIFF_NUMS is the list of numbers corresonding to (symplectic)
-%   Clifford matrices for the corresponding value of Hdim.
+%   Clifford matrices for the relevant value of Hdim.
 %
 %   -- HDIM is the Majorana parafermion order.
 %
@@ -50,8 +50,6 @@ function  [Psi, NumGenerators] = TimeStepMajoranaBasic(Psi, NumGenerators, C_Num
     
     NumSites = NumRows;
     %   Just here for code readability
-    
-    Num_C_Numbers = numel(C_Numbers_Hdim);
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %   First, the odd pairings: (1,2), (3,4), etc.

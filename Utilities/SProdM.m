@@ -1,4 +1,14 @@
-function Out = SProd(a,b,Hdim)
+function Out = SProdM(a,b,Hdim)
+%SPRODM  Calculate the symplectic product of two row vectors using the
+% Majorana parafermion symplectic matrix.
+%
+%   OUT = SPRODM(A, B, HDIM) calculates the row-vector symplectic inner
+%   product modulo HDIM, OUT = A*M*B, where M is the Majorana parafermion
+%   symplectic metric.
+%
+%   See also SYMPLECTICMETRICMAJORANA
+
+
 % Gives the row-vector symplectic inner product Out = a*Om*b'
 % Can be used for matrices, too, as long as the dimensions line up.
 
@@ -14,8 +24,8 @@ if aNumColumns~=bNumColumns
     return
 end
 
-Dim = aNumColumns;
-Om = SMetric(Dim);
+NumSites = aNumColumns/2;
+Om = SymplecticMetricMajorana(NumSites);
 
 Out = mod(a*Om*b',Hdim);
     

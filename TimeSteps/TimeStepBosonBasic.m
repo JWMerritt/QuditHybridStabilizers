@@ -1,4 +1,4 @@
-function  [Psi,NumGenerators] = TimeStepBosonBasic(Psi,NumGenerators,C_Numbers_Hdim,Hdim,UnitaryFunc,RunOptions,S_Metric)
+function  [Psi, NumGenerators] = TimeStepBosonBasic(Psi, NumGenerators, C_Numbers_Hdim, Hdim, UnitaryFunc, RunOptions, S_Metric)
 %TIMESTEPBOSONBASIC  Apply a time step to a system.
 %
 %   [PSI, NUM_GENS] = TIMESTEPBOSONBASIC(PSI, NUM_GENS, CLIFF_NUMS, HDIM,

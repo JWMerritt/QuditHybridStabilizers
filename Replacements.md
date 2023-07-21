@@ -20,3 +20,5 @@ TimeStepBasic | TimeStepMajoranaBasic
 TimeStepBosonic | TimeStepBosonBasic
 SystemSymplecticBoson / BosonSymplectic | SymplecticBoson
 SystemSymplecticMajorana | SymplecticMajorana
+batch_code | RunBatch
+run_code(<br>CKPT_Name_Fullpath,<br>RunLocation='klone_hyak'<br>\*RC=false, \*Verbose=false) | QuditStateEvol(<br>CKPT_Name_Fullpath,<br>RunLocation='mmfs1/home/...',<br>\*Verbose=false)

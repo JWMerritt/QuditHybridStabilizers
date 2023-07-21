@@ -1,6 +1,12 @@
-function MatrixOut = SystemSymplecticBoson(Hdim)
-% MatrixOut = SystemSymplecticBoson(Hdim)
-% Uses symplectic Gram-Schmidt orthonormalization to make a random 4x4 symplectic matrix modulo Hdim.
+function MatrixOut = PairSymplecticBoson(Hdim)
+%PAIRSYMPLECTICBOSON  Create a random 4-by-4 bosonic symplectic matrix.
+%
+%   OUT = PAIRSYMPLECTICBOSON(HDIM) creates a random 4-by-4 bosonic
+%   symplectic matrix modulo HDIM. The matrices are generated over a
+%   uniform probability distribution of all possible 4-by-4 symplectic
+%   matrices using a symplectic Gram-Schmidt orthonormalization process.
+%
+%   For more information, see: https://doi.org/10.1063/1.4903507
 
 %v1.5
 
