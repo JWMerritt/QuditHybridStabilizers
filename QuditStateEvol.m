@@ -24,10 +24,12 @@ function QuditStateEvol(CKPT_Name_Fullpath,CodeLocation,Verbose)
 %
 %   See also MAKE_CKPT, RUNBATCH
 
-RunVersion = 'RELEASE_0.9'
+RunVersion = 'RELEASE_0.9';
 SelfName = 'QuditStateEvol'; % Here to have the correct documentation for errors.
 
-
+if nargin<3
+    Verbose=false;
+end
 
 
 
@@ -162,10 +164,10 @@ for ii=1:numel(DATA_BKUPVariables)
 	end
 end
 
-fprintf('\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n')
-fprintf('%s ver. %s\n',SelfName,RunVersion)
+fprintf('\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n ')
+fprintf('\n\n   %s ver. %s\n',SelfName,RunVersion)
 
-fprintf(cat(2,'\n QSE: Starting CKPT load code.\n QSE: CKPT file:\n    ',CKPT_Name_Fullpath,'\n'))
+fprintf(cat(2,'\n QSE: Starting CKPT load code.\n QSE: CKPT file:\n   ',CKPT_Name_Fullpath,'\n'))
 if Verbose; whos; pause(10); end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -199,7 +201,7 @@ while LoadAttempts==0
 
 		fprintf('\n QSE: Loading CKPT variables...')
 		load(CKPT_Name_Fullpath,'JobName','DATA_Name_Fullpath','UnitaryFunc','EvolFunc','C_Numbers_Int','TotalTimeSteps','SystemSizeValues','Number_SystemSizes','SystemSize_Index','MeasurementProbabilityValues','Number_MeasurementProbabilities','MeasurementProbability_Index','InteractingProbabilityValues','Number_InteractingProbabilities','InteractingProbability_Index','RunOptions','CircuitsPerSystemSize','TimeStepsBeforeSaving','Number_ParallelStates','Number_TimesLoaded','Number_TimesCalculationsSaved','CircuitsPerSystemSize_Counter','TimeSteps_CurrentState','TimeBeforeMakingBKUP','TimeBeforeMakingBKUP_Counter','CurrentNumber_TimesBackedUp','InitializeState','StateArray_Coded')
-        fprintf('\QSE: CKPT Load attempt successful...')
+        fprintf('\n QSE: CKPT Load attempt successful...')
 		LoadAttempts = -1;
 
 		if QSE_CheckCKPTVarFailure(CKPT_UsedVariables)
@@ -235,7 +237,7 @@ while LoadAttempts==0
 			fprintf('\n >>:ERROR loading CKPT Save file.')
 			fprintf('\n  ~~  %s',LoadFailErr.identifier)
 			fprintf('\n  ~~  "%s"',LoadFailErr.message)
-			fprintf('\n >>: Attempting to load from backup...')
+			fprintf('\n >>: Attempting to load from backup...\n')
 			LoadAttempts = 2;
 			pause(30)
 		end
@@ -264,7 +266,7 @@ while LoadAttempts==0
 			fprintf('\n >>: ERROR loading BKUP_CKPT Save file.')
 			fprintf('\n  ~~  %s',LoadFailErr.identifier)
 			fprintf('\n  ~~  "%s"',LoadFailErr.message)
-			fprintf('\n >>: Trying one last time...')
+			fprintf('\n >>: Trying one last time...\n')
 			LoadAttempts = 3;
 			pause(30)
 		end
@@ -327,7 +329,7 @@ fprintf('\n QSE: Current Run Info - current successful run: %d (current successf
 
 if Verbose; whos; pause(10); end
 
-fprintf('\n QSE: Starting Data load code.\n X: Data file: %s\n\n',DATA_Name_Fullpath)
+fprintf('\n QSE: Starting Data load code.\n QSE: DATA file:\n   %s\n',DATA_Name_Fullpath)
 
 LoadAttempts = 0;
 DATA_WasLoadedFromBKUP = false;
@@ -344,7 +346,7 @@ while LoadAttempts == 0
 		LoadAttempts = -1;
 
 		if QSE_CheckDATAVarFailure(DATA_UsedVariables)
-			fprintf(' >>: Problem: Not all DATA variables loaded correctly.\n >>:   Trying again...')
+			fprintf(' >>: Problem: Not all DATA variables loaded correctly.\n >>:   Trying again...\n')
 			LoadAttempts = 1;
 			pause(10)
 		end
@@ -368,7 +370,7 @@ while LoadAttempts == 0
 			LoadAttempts = -1;
 
 			if QSE_CheckDATAVarFailure(DATA_UsedVariables)
-				fprintf(' >>: Problem: Not all DATA variables loaded correctly.\n >>:   Trying from BKUP_A...')
+				fprintf(' >>: Problem: Not all DATA variables loaded correctly.\n >>:   Trying from BKUP_A...\n')
 				LoadAttempts = 2;
 				pause(10)
 			end
@@ -393,7 +395,7 @@ while LoadAttempts == 0
 			fprintf('\n QSE: DATA load complete...')
 
 			if QSE_CheckDATAVarFailure(DATA_UsedVariables)
-				fprintf('\n >>: Problem: Not all BKUP_A variables loaded correctly.\n >>:   Trying again...')
+				fprintf('\n >>: Problem: Not all BKUP_A variables loaded correctly.\n >>:   Trying again...\n')
 				LoadAttempts = 3;
 				pause(10)
 			else
@@ -423,7 +425,7 @@ while LoadAttempts == 0
 			fprintf('\n QSE: DATA load complete...')
 
 			if QSE_CheckDATAVarFailure(DATA_UsedVariables)
-				fprintf('\n >>: Problem: Not all BKUP_A variables loaded correctly.\n >>:   Attempting to load from BKUP_B...')
+				fprintf('\n >>: Problem: Not all BKUP_A variables loaded correctly.\n >>:   Attempting to load from BKUP_B...\n')
 				LoadAttempts = 4;
 				pause(10)
 			else
@@ -453,7 +455,7 @@ while LoadAttempts == 0
 			fprintf('\n QSE: DATA load complete...')
 
 			if QSE_CheckDATAVarFailure(DATA_UsedVariables)
-				fprintf('\n >>: Problem: Not all BKUP_B variables loaded correctly.\n >>:   Trying one final time...')
+				fprintf('\n >>: Problem: Not all BKUP_B variables loaded correctly.\n >>:   Trying one final time...\n')
 				LoadAttempts = 5;
 				pause(10)
 			else
@@ -769,7 +771,7 @@ while ~Complete
 					
 					StateArray = cell(Number_ParallelStates,1);
 					if Verbose; fprintf('.. Initializing StateArray'); end
-					for ii=1:Number_ParallelStatess
+					for ii=1:Number_ParallelStates
 						StateArray{ii} = struct('State',StartState,'Number_Generators',Number_Generators);
 					end
 					
@@ -788,11 +790,12 @@ while ~Complete
 				
 				
 						%%%%%%%%%%%%%%%%%%%%%%%%		%%%%%%%%%%%%%
-				fprintf(['\n  Running circuit %d / %d, (%d Realization entries),',...
+				fprintf(['\n\n  Running circuit %d / %d',...
                     '\n    MeasurementProbability = %.3f   (%d/%d),',...
                     '\n    InteractingProbability = %.3f   (%d/%d),',...
-                    '\n  current time: %s\n'],...
-                    CircuitsPerSystemSize_Counter,CircuitsPerSystemSize(SystemSize_Index),currentReals,MeasurementProbabilityValues(MeasurementProbability_Index),MeasurementProbability_Index,Number_MeasurementProbabilities,InteractingProbabilityValues(InteractingProbability_Index),InteractingProbability_Index,Number_InteractingProbabilities,datetime("now"));
+                    '\n    Realizations completed for these parameters: %.0f',...
+                    '\n  Current time: %s'],...
+                    CircuitsPerSystemSize_Counter,CircuitsPerSystemSize(SystemSize_Index),MeasurementProbabilityValues(MeasurementProbability_Index),MeasurementProbability_Index,Number_MeasurementProbabilities,InteractingProbabilityValues(InteractingProbability_Index),InteractingProbability_Index,Number_InteractingProbabilities,currentReals,datetime("now"));
 						%%%%%%%%%%%%%%%%%%%%%%%%		%%%%%%%%%%%%%
 				
 				
@@ -847,9 +850,10 @@ while ~Complete
 					
 					Has_Not_Been_Enough_Time = true; 	% Used for whenever we complete a realization, but there's too much time left
 					    if Verbose; fprintf('\n VV: starting Has_Not_Been_Enough_Time loop...'); end
+                    ParloopTooFast_Counter = false;
 
 					while Has_Not_Been_Enough_Time
-
+                        
 						try
 							parfor par_Core_Index=1:Number_ParallelStates	% Split the load among the cores
 
@@ -913,7 +917,7 @@ while ~Complete
 						
 						StateArray = TempArray;
 						if TimeStepsBeforeSaving(SystemSize_Index)>0
-							TimeSteps_CurrentState = TimeSteps_CurrentState + TimeStepsBeforeSaving(SystemSize_Index);
+							TimeSteps_CurrentState = min(TimeSteps_CurrentState+TimeStepsBeforeSaving(SystemSize_Index), TotalTimeSteps(SystemSize_Index));
 								%if we did less than subPeriod, that's okay, since this 
 								%will still put matTime over N and not restart the loop
 						else
@@ -935,10 +939,15 @@ while ~Complete
 						%	Number in seconds before going on to make a backup
 
 						if toc(BKUP_tic)<BKUP_tic_Limit
-							fprintf(' -@ %d/%d @- ',toc(BKUP_tic),BKUP_tic_Limit)
+                            if ~ParloopTooFast_Counter
+                                fprintf('\n       Quick parloop: completed in')
+                            end
+                            ParloopTooFast_Counter = true;
+							fprintf(' %.0fsec/%.0fsec...',toc(BKUP_tic),BKUP_tic_Limit)
 							Has_Not_Been_Enough_Time = true;
 							if TimeSteps_CurrentState >= TotalTimeSteps(SystemSize_Index)
 								Has_Not_Been_Enough_Time = false;
+                                fprintf(' Realization completed.')
 								pause(60)
 							end
 						else
@@ -980,8 +989,9 @@ while ~Complete
 						
 						%	This whole set of loops is for cycling the DATA_BKUP_# files
                         %   If there are a cumulative total of 20 failures, the program exits.
-
-						while (~saveSuccess) && (trialCounter<20) && isequal(exist(cat(2,DATA_Name_Fullpath,'__BKUP_B.mat'),'file'),2)
+                        
+                        BKUP_B_Exists = isequal(exist(cat(2,DATA_Name_Fullpath,'__BKUP_B.mat'),'file'),2);
+						while (~saveSuccess) && (trialCounter<20) && BKUP_B_Exists
 
 							    if Verbose; fprintf('\n   vv: B->C...'); end
 
@@ -1003,8 +1013,8 @@ while ~Complete
 						end
 
 						saveSuccess = false;
-
-						while (~saveSuccess) && (trialCounter<20) && isequal(exist(cat(2,DATA_Name_Fullpath,'__BKUP_A.mat'),'file'),2)
+                        BKUP_A_Exists = isequal(exist(cat(2,DATA_Name_Fullpath,'__BKUP_A.mat'),'file'),2);
+						while (~saveSuccess) && (trialCounter<20) && BKUP_A_Exists
 
 							if Verbose; fprintf('\n   vv: A->B...'); end
 
@@ -1036,7 +1046,8 @@ while ~Complete
 							if Verbose; fprintf('\n   vv: Data->A...'); end
 
 							try % Rather than copying DATA to BKUP_A, just save the current data as BKUP_A, and test to see if the file loads.
-								fprintf('\nBKUP_InfoString = "%s"\n',BKUP_InfoString)
+								%fprintf('\nBKUP_InfoString = "%s"',BKUP_InfoString)
+                                fprintf('\n   -- BKUP %.0f performed successfully.', CurrentNumber_TimesBackedUp+1)
 								saveSuccess = QSE_SaveData(cat(2,DATA_Name_Fullpath,'__BKUP_A'),DATA_BKUPVariables,true,'DATA_BKUP_A');
 									if Verbose; fprintf('\n   vv: DATA backed up successfully...'); end
 								trialCounter = 0;
@@ -1254,10 +1265,10 @@ while ~Complete
 			QSE_SaveData(CKPT_Name_Fullpath, [CKPT_UsedVariables; '-v7.3'], true, 'CKPT')
 			%QSE_SaveData(ckptNameFull,'''N_i'',''p_i'',''q_i'',''circuits'',''initializeState'',''matTime'',''-append''',false,'CKPT -append')
 			
-			if Verbose; fprintf(' VV: N value complete. SystemSize_Index = %d, MeasurementProbability_Index = %d, InteractingProbability_Index = %d, CircuitsPerSystemSize_Counter = %d',SystemSize_Index,MeasurementProbability_Index,InteractingProbability_Index,CircuitsPerSystemSize_Counter); end
+			if Verbose; fprintf(' VV: SystemSize value complete. SystemSize_Index = %d, MeasurementProbability_Index = %d, InteractingProbability_Index = %d, CircuitsPerSystemSize_Counter = %d',SystemSize_Index,MeasurementProbability_Index,InteractingProbability_Index,CircuitsPerSystemSize_Counter); end
 		end
 
-		if Verbose; fprintf('\n VV: N_i loop completed.'); end
+		if Verbose; fprintf('\n VV: SystemSize_Index loop completed.'); end
 		
 		%	If this code is running, then we've gone through all of the
         %	SystemSizeValues, and SystemSize_Index > Number_SystemSizes
@@ -1269,7 +1280,7 @@ while ~Complete
 
 
 	catch MainFail
-		fprintf('\n >>: Error in executing main code of QudieStateEvol:')
+		fprintf('\n >>: Error in executing main code of QuditStateEvol:')
 		fprintf('\n ~~ %s',MainFail.identifier)
 		fprintf('\n ~~ "%s"',MainFail.message)
 
@@ -1386,7 +1397,7 @@ function varsFailed = QSE_CheckCKPTVarFailure(Vars)
 		failVars;
 		varsFailed = true;
 	else
-		fprintf('\n XX: All CKPT variables loaded.\n')
+		fprintf('\n QSE: All CKPT variables loaded.\n')
 		varsFailed = false;
 	end		
 end
@@ -1414,7 +1425,7 @@ function varsFailed = QSE_CheckDATAVarFailure(Vars)
 		failVars;
 		varsFailed = true;
 	else
-		fprintf('\n XX: All Data variables loaded.\n')
+		fprintf('\n QSE: All Data variables loaded.\n')
 		varsFailed = false;
 	end		
 end

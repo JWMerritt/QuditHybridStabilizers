@@ -122,7 +122,7 @@ CKPT_UsedVariables = {
 
 PrintOut = cat(2,' MC: Making CKPT Save for: ',JobName,sprintf('\n%s\n',datetime("now")));
 % '\n%.4d/%.2d/%.2d, %.2d:%.2d\n'
-fprintf(PrintOut
+fprintf(PrintOut)
 
 
 pause(3)
@@ -201,6 +201,8 @@ if TimeStepsBeforeSaving(1)>0
 		    error('Invalid StatisticsType. RunOptions.StatisticsType should be either ''Boson'' or ''Fermion''.')
 	    end
     end
+    
+    N = SystemSizeValues(1); % The size of the first system we'll be working with.
 
     if IsPure
         if System_Is_Bosonic
@@ -274,7 +276,7 @@ while ~clusterSuccess
 end
 
 if MyCluster.NumWorkers<Number_ParallelStates
-	error('\nError! Cluster cores less than Number_ParallelStates. Server probably doesn''t have enough cores alloted to MATLAB...\n')
+	error('Cluster has fewer cores available than Number_ParallelStates. The server probably doesn''t have enough cores alloted to MATLAB...')
 elseif MyCluster.NumWorkers>Number_ParallelStates
     fprintf('\nCluster has more cores than Number_ParallelStates. Decreasing...')
     MyCluster.NumWorkers = Number_ParallelStates;

@@ -25,4 +25,9 @@ run_code(<br>CKPT_Name_Fullpath,<br>RunLocation='klone_hyak'<br>\*RC=false, \*Ve
 RealizationsPerSystemSize | CircuitsPerSystemSize
 RealizationsBeforeSaving | TimeStepsBeforeSaving
 Number_ParallelRealizations | Number_ParallelStates
-make_batch_ckpts | Make_Jobs
+C_Numbers_Int | C_Numbers_Hdim
+make_batch_ckpts.m | Create_Jobs.m
+CliffordSymplecticMajorana.m | CNumToMajSymplectic.m
+
+To test:
+subPeriod<0 for fermions and bosons.

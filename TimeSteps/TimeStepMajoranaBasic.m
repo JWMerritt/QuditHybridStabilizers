@@ -70,7 +70,7 @@ function  [Psi, NumGenerators] = TimeStepMajoranaBasic(Psi, NumGenerators, C_Num
     end
     
     for site_idx=MeasurementSites
-        [Psi,NumGenerators] = Measure(Psi,NumGenerators,site_idx,Hdim,NumRows,NumColumns,S_Metric);
+        [Psi,NumGenerators] = MeasureMajorana(Psi,NumGenerators,site_idx,Hdim,NumRows,NumColumns,S_Metric);
     end
     
     
@@ -94,7 +94,7 @@ function  [Psi, NumGenerators] = TimeStepMajoranaBasic(Psi, NumGenerators, C_Num
     end
     
     for site_idx=MeasurementSites
-        [Psi,NumGenerators] = Measure(Psi,NumGenerators,site_idx,Hdim,NumRows,NumColumns,S_Metric);
+        [Psi,NumGenerators] = MeasureMajorana(Psi,NumGenerators,site_idx,Hdim,NumRows,NumColumns,S_Metric);
     end
 
 end

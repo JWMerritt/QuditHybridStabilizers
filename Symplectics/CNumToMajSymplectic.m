@@ -1,4 +1,14 @@
-function MatrixOut = CliffordSymplecticMajorana(C_Number,Hdim)
+function MatrixOut = CNumToMajSymplectic(C_Number,Hdim)
+%CNUMTOMAJSYMPLECTIC  Turn an integer into a matrix
+%
+%   OUT = CNUMTOMAJSYMPLECTIC(CLIFF_NUMBER, HDIM) returns a 4-by-4 matrix,
+%   who's entries are functions of the digits of CLIFF_NUMBER when written
+%   in base-HDIM (little-endian). Note that this does not necessarily
+%   result in a symplectic matrix, unless the input CLIFF_NUMBER is chosen
+%   correctly.
+%
+%   See also FINDCLIFFS
+
 % gives the actual 4x4 symplectic matrix, given the numerical output of
 % FindCliffs.
 

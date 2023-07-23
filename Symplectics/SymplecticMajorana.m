@@ -53,7 +53,7 @@ function [Out, EvenNumOfSites] = SymplecticMajorana(C_Numbers_Hdim, Hdim, NumSit
     
     for PairIndex = 0:NumPairs-1
         RandNum = randi([1,Num_C_Numbers]);
-        SymplecticLocal = CliffordSymplecticMajorana(C_Numbers_Hdim(RandNum),Hdim);
+        SymplecticLocal = CNumToMajSymplectic(C_Numbers_Hdim(RandNum),Hdim);
         ColumnIndex = 4*PairIndex;
         Out(ColumnIndex+1:ColumnIndex+4, ColumnIndex+1:ColumnIndex+4) = SymplecticLocal;
     end
@@ -63,9 +63,9 @@ function [Out, EvenNumOfSites] = SymplecticMajorana(C_Numbers_Hdim, Hdim, NumSit
     if (Offset==1)&&(EvenNumOfSites)
             % This Symplectic matrix will wrap around the system, connecting i=N and i=1.
             % We negate half of the matrix to account for the change in the metric as we wrap around the system.
-        SymplecticLocal = mod(-diag([-1,-1,1,1])*CliffordSymplecticMajorana(C_Numbers_Hdim(RandNum),Hdim)*diag([1,1,-1,-1]),Hdim);
+        SymplecticLocal = mod(-diag([-1,-1,1,1])*CNumToMajSymplectic(C_Numbers_Hdim(RandNum),Hdim)*diag([1,1,-1,-1]),Hdim);
     else
-        SymplecticLocal = CliffordSymplecticMajorana(C_Numbers_Hdim(RandNum),Hdim);
+        SymplecticLocal = CNumToMajSymplectic(C_Numbers_Hdim(RandNum),Hdim);
     end
     ColumnIndex = 4*PairIndex;
     Out(ColumnIndex+1:ColumnIndex+4, ColumnIndex+1:ColumnIndex+4) = SymplecticLocal;

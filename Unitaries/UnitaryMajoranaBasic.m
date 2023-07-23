@@ -28,7 +28,7 @@ function StateOut = UnitaryMajoranaBasic(StateIn,NumColumns,C_Numbers_Hdim,Hdim,
 
     % Mostly a wrapper for SystemSymplecticMajorana, but in a standard form.
     
-    SystemSymplectic = SiteSymplecticMajorana(NumColumns/2,C_Numbers_Hdim,Hdim,Offset);
+    SystemSymplectic = SymplecticMajorana(C_Numbers_Hdim, Hdim, NumColumns/2, Offset);
     %   We dont need any RunOptions for this evolution.
     
     StateOut = mod(StateIn*SystemSymplectic,Hdim);
