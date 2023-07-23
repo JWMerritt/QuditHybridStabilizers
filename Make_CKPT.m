@@ -165,7 +165,7 @@ TimeBeforeMakingBKUP
 
 TimeBeforeMakingBKUP_Counter = 0;
 
-CurrentNumber_TimesBackedUp = 1;
+CurrentNumber_TimesBackedUp = 0;
 
 InitializeState = false;
     % The states will be saved in a trivial state.

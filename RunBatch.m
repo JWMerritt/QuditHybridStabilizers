@@ -1,9 +1,10 @@
 function RunBatch(CKPT_Name_Fullpath,JobName,Diary_Name_Fullpath)
-%   sets up the cluster, then batches run_code.
-
-%fprintf('\nEntered batch_code\n')
-
-Verbose = false;
+%RUNBATCH  Execute QuditStateEvol and continuously update an output diary
+% file.
+%   PLEASE NOTE that if the function RUNBATCH is executed in the MATLAB
+%   terminal and then cancelled, QuditStateEvol will still be running on
+%   the parcluster. It can be removed using `MyCluster =
+%   parcluster(JobName); delete(MyCluster.Jobs);`.
 
 fprintf('\n RB: Starting RunBatch.')
 fprintf('\n   Date: %s', datetime("now"))
@@ -18,11 +19,6 @@ fprintf('\n RB: Deleting all old jobs on this cluster...')
 delete(MyCluster.Jobs)
 fprintf('\n RB: Done. MyCluster.Jobs = ')
 MyCluster.Jobs
-%fprintf('\n   Cluster Profile: %s', MyCluster.Profile)
-%fprintf('\n   Host: %s', MyCluster.Host)
-%fprintf('\n   NumWorkers: %.0f', MyCluster.NumWorkers)
-%fprintf('\n   Current Jobs: ')
-%MyCluster.Jobs
 fprintf('\n===========')
 fprintf('\n RB: Batching QuditSateEvol...');
 RunJob = batch(MyCluster,'QuditStateEvol',0,{CKPT_Name_Fullpath,'C:\Users\jmerr\Documents\MATLAB\ParafermionComponents'});

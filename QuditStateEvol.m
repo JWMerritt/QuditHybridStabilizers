@@ -659,7 +659,7 @@ end
 
 
 
-fprintf('\n\n.....\n Running Execution %d (%d successful saves)\n....\n\n',Number_TimesLoaded+1,Number_TimesCalculationsSaved+1)
+fprintf('\n\n.....\n Running Execution %d (%d previous successful saves)\n....\n\n',Number_TimesLoaded+1,Number_TimesCalculationsSaved+1)
 Number_TimesLoaded = Number_TimesLoaded + 1; 	%Update now that the program has launched successfully.
 if Verbose; fprintf('\n VV: Number_TimesLoaded (# of startups) updated; program launched successfully.\n'); end
 QSE_SaveData(CKPT_Name_Fullpath,{'Number_TimesLoaded','-append'},false,'CKPT -append');

@@ -28,7 +28,12 @@ After a certain amount of time steps, the subsystem entanglement entropy is meas
 
 # How the code works
 
-The basic structure of the code is to create an initial trivial state, apply unitary and projective measurements to the state for a certain number of time steps, and then extract quantites such as the subsystem entropy. The user can define their own unitary operations and time steps, but the basic ones implement a Clifford unitary on pairs of sites (which are really symplectic matrices in the calculation) and do projective measurements.
+The basic action of the code is to:
+- create an initial trivial state
+- apply unitary and projective measurements to the state for a certain number of time steps
+- extract quantites such as the subsystem entropy from the final state.
+
+The user can define their own unitary operations and time steps, but the basic ones implement a Clifford unitary on pairs of sites (which are really symplectic matrices in the calculation) and do projective measurements.
 
 This code was designed to work on the [HYAK](https://hyak.uw.edu/) supercomputer at the Unviersity of Washington. In particular, it was designed to work on the Checkpoint (CKPT) queue, which used leftover resources. The program could be killed at any time by a program with higher priority. 
 
@@ -45,3 +50,9 @@ Each Job has the following files associated with it:
 Because HYAK uses Slurm to queue jobs, and the job could be killed at any time, this code resorts to setting up an independent parallel cluster profile for each job.
 
 The calculation is run by running the function `QuditStateEvol(CKPT_FILE, CODE_PATH)`, where `CKPT_FILE` is the full path/file name (without .mat extension) of the Job's `CKPT` file, and `CODE_PATH` is the location of the folder for this repo containing QuditStateEvol and its dependencies.
+
+A couple of helper functions have been included for this. `Create_Jobs` is a function that formalizes creating all of the necessary variables and creating the Jobs. `RunBatch` is a function that initializes the `parcluster` and then batches `QuditStateEvol`. Using these helper functions, the Job also has:
+
+ - A `JobName.sh` shell script which can be batched using slurm's `squeue` command.
+ - An `Output` folder which will contain the output logs from slurm.
+ - An `ExitFiles` folder, which will contain a `JobName.done` file when the code has completed all of its realizations. Otherwise, the code would stay on the `CKPT` queue and do nothing except make very long output files.

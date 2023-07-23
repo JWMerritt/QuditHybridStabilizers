@@ -1,4 +1,4 @@
-function Failures = Create_Jobs(password,C_Numbers_Int)
+function Failures = Create_Jobs(password,C_Numbers_Hdim)
 %CREATE_JOBS  Create multiple Jobs to run with the QuditHybridStabilizers
 % framework. The user will primarily work with functions/scripts such as
 % this one. The function CREATE_JOBS should be changed to reflect the Jobs
@@ -22,7 +22,7 @@ function Failures = Create_Jobs(password,C_Numbers_Int)
 %   corresponding to parafermion order, which generate the symplectic
 %   matrices that correspond to unitary operations on the system.
 %
-%   See also MAKE_CKPT, QUDITSTATEEVOL
+%   See also MAKE_CKPT, QUDITSTATEEVOL, MAKE_SH
 	
 	if nargin==0
 		password=0+1i;
@@ -38,10 +38,10 @@ function Failures = Create_Jobs(password,C_Numbers_Int)
 	%   of Make_Jobs that you intend to use. Make this password different
 	%   for each job.
 
-	PASSWORD = 'main';
+	PASSWORD = 'password';
 	
 	if ~isequal(password,PASSWORD)
-		fprintf('oops, wrong password. Make sure you''re using the right Create_Jobs code.\n')
+		fprintf('Oops, wrong password. Make sure you''re using the right Create_Jobs code.\n')
 		Failures = {'n/a'};
 		return
 	end
@@ -52,28 +52,28 @@ function Failures = Create_Jobs(password,C_Numbers_Int)
     
 	
 	JobNickname = 'Main'
-	JobInformation = 'klone run. QuditStateEvol.m with @TimeStepBosonic and @BosonUnitary.'
+	JobInformation = 'Enter some information here about where the code is running, and what functions it uses.'
 	JobSpecifications_Root = ''
 
 
 	Hdim = 3
+    C_Numbers_Hdim = load('C_Numbers_All.mat').C_Numbers_3;
 
 	IsPure = true
 
-	UnitaryFunc = @BosonUnitary
-	EvolFunc = @TimeStepBosonic
+	UnitaryFunc = @UnitaryMajoranaBasic
+	EvolFunc = @TimeStepMajoranaBasic
 
-	StatisticsType = 'Boson'
+	StatisticsType = 'Fermion'
 	
 	RunOptions = struct('MeasurementProbability',0,'InteractingProbability',0,'StatisticsType',StatisticsType)
 	%	'MeasurementProbability' and 'InteractingProbability' usually get assigned inside QuditStateEvol.
 	
-	RunLimits = 2000
 	NodeTime = '32:00:00'
 	NodeMemory = '20G'
 	
-	Number_ParallelStates = 20
-	TimeBeforeMakingBKUP = 10*60
+	Number_ParallelStates = 2
+	TimeBeforeMakingBKUP = 3*60
 		% = time in seconds
 	
 	% Expected: /Output/ folder for Slurm .log files; /ExitFiles/ folder for .done files
@@ -84,6 +84,11 @@ function Failures = Create_Jobs(password,C_Numbers_Int)
 	CKPTFolderLocation = '/mmfs1/gscratch/stf/jm117/ckpts/Parafermions/'
 	% 	DON'T FORGET to make the CKPT directory!
 	
+    JobFolderName = 'TEST1'
+    JobFolderLocation = '/home/nerneg/Code/MATLAB/Tests/Jobs/'
+    DiaryFolderLocation = '/home/nerneg/Code/MATLAB/Tests/diaries/'
+    CKPTFolderLocation = '/home/nerneg/Code/MATLAB/Tests/ckpts/'
+
 	JobPath = cat(2,JobFolderLocation,JobFolderName)
 		%	Location of the following folders
 	SaveLocation = cat(2,JobFolderLocation,JobFolderName,'/DATA')
@@ -96,6 +101,9 @@ function Failures = Create_Jobs(password,C_Numbers_Int)
         %   Location of the diaries, which are the outputs from the batch() jobs.
 	sh_Folder = cat(2,'/mmfs1/home/jm117/MATLAB/Parafermions/Jobs/',JobFolderName)
 		%	Location of the 'FILENAME.sh' files
+
+    CKPT_Folder = '/home/nerneg/Code/MATLAB/Tests/ckpts'
+    Diary_Folder = '/home/nerneg/Code/MATLAB/Tests/diaries'
 	
 	
 	%JobName,JobInformation,JobSpecifications,Hdim,IsPure,UnitaryFunc,EvolFunc,C_Numbers_Int,TotalTimeSteps,SystemSizeValues,MeasurementProbabilityValues,InteractingProbabilityValues,RunOptions,RealizationsPerSystemSize,RealizationsBeforeSaving,Number_ParallelStates,TimeBeforeMakingBKUP,SaveLocation,ClusterLocation,CKPT_Name_Fullpath)
@@ -108,16 +116,16 @@ function Failures = Create_Jobs(password,C_Numbers_Int)
     % functions that actually make the files.
 	
 
-	N__ALL_SystemSizes = 100
-	N__ALL_TotalTimeSteps = 100
-	N__ALL_CircuitsPerN = 30
-	N__ALL_TimePerSave = 25
+	N__ALL_SystemSizes = 250
+	N__ALL_TotalTimeSteps = 250
+    N__ALL_CircuitsPerN = 10
+	N__ALL_TimePerSave = -3
 	%}
 
 	N__NumberOfSystemSizes = 1;
 	MProbs = [0.15,0.16,0.17]
 	MString = 'n016'
-	IProbs = [0,0.5]
+	IProbs = [0,1]
 	
 	if all( [numel(N__ALL_SystemSizes)==N__NumberOfSystemSizes,...
             numel(N__ALL_TotalTimeSteps)==N__NumberOfSystemSizes,...
@@ -138,11 +146,12 @@ function Failures = Create_Jobs(password,C_Numbers_Int)
 
             % Jobs will be named [JOBNICKNAME]_d[HDIM]_N[SYSTEMSIZE]_m[MVAL]_[#]
 
-			JobName = bmakeNames(JobNickname,num2str(Hdim),num2str(SystemSizeValues),MString,'1');
-			makeFiles
+			%JobName = bmakeNames(JobNickname,num2str(Hdim),num2str(SystemSizeValues),MString,'1');
+			JobName = 'TEST1_d3f_N250_mn016_2';
+            makeFiles
 			
-			JobName = bmakeNames(JobNickname,num2str(Hdim),num2str(SystemSizeValues),MString,'2');
-			makeFiles
+			%JobName = bmakeNames(JobNickname,num2str(Hdim),num2str(SystemSizeValues),MString,'2');
+			%makeFiles
 			
 		end
 	else
@@ -191,7 +200,8 @@ function Failures = Create_Jobs(password,C_Numbers_Int)
 			CKPT_Name_Fullpath = cat(2,CKPT_Folder,'/',JobName,'_CKPT');
             Diary_Name_Fullpath = cat(2,Diary_Folder,'/',JobName)
 			JobSpecifications = cat(2, JobSpecifications_Root, sprintf('Hdim = %d, IsPure = %d, Number_ParallelStates = %d',Hdim,IsPure,Number_ParallelStates));
-			Make_CKPT(JobName,JobInformation,JobSpecifications,Hdim,IsPure,UnitaryFunc,EvolFunc,C_Numbers_Int,TotalTimeSteps,SystemSizeValues,MeasurementProbabilityValues,InteractingProbabilityValues,RunOptions,CircuitsPerSystemSize,TimeStepsBeforeSaving,Number_ParallelStates,TimeBeforeMakingBKUP,SaveLocation,ClusterLocation,CKPT_Name_Fullpath)
+            %fprintf(JobName,JobInformation,JobSpecifications,Hdim,IsPure,UnitaryFunc,EvolFunc,C_Numbers_Hdim,TotalTimeSteps,SystemSizeValues,MeasurementProbabilityValues,InteractingProbabilityValues,RunOptions,CircuitsPerSystemSize,TimeStepsBeforeSaving,Number_ParallelStates,TimeBeforeMakingBKUP,SaveLocation,ClusterLocation,CKPT_Name_Fullpath)
+			Make_CKPT(JobName,JobInformation,JobSpecifications,Hdim,IsPure,UnitaryFunc,EvolFunc,C_Numbers_Hdim,TotalTimeSteps,SystemSizeValues,MeasurementProbabilityValues,InteractingProbabilityValues,RunOptions,CircuitsPerSystemSize,TimeStepsBeforeSaving,Number_ParallelStates,TimeBeforeMakingBKUP,SaveLocation,ClusterLocation,CKPT_Name_Fullpath)
 			Make_batch_sh(sh_Folder,JobPath,JobName,CKPT_Name_Fullpath,Diary_Name_Fullpath,NodeTime,NodeMemory,Number_ParallelStates)
 		end
     end
