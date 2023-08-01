@@ -53,7 +53,7 @@ CKPT_UsedVariables = {
     'DATA_Name_Fullpath'
     'UnitaryFunc'
     'EvolFunc'
-    'C_Numbers_Int'
+    'C_Numbers_Hdim'
     'TotalTimeSteps'                % should be a matrix of the same size as SystemSizeValues
     'SystemSizeValues'
     'Number_SystemSizes'
@@ -200,7 +200,7 @@ while LoadAttempts==0
 	try
 
 		fprintf('\n QSE: Loading CKPT variables...')
-		load(CKPT_Name_Fullpath,'JobName','DATA_Name_Fullpath','UnitaryFunc','EvolFunc','C_Numbers_Int','TotalTimeSteps','SystemSizeValues','Number_SystemSizes','SystemSize_Index','MeasurementProbabilityValues','Number_MeasurementProbabilities','MeasurementProbability_Index','InteractingProbabilityValues','Number_InteractingProbabilities','InteractingProbability_Index','RunOptions','CircuitsPerSystemSize','TimeStepsBeforeSaving','Number_ParallelStates','Number_TimesLoaded','Number_TimesCalculationsSaved','CircuitsPerSystemSize_Counter','TimeSteps_CurrentState','TimeBeforeMakingBKUP','TimeBeforeMakingBKUP_Counter','CurrentNumber_TimesBackedUp','InitializeState','StateArray_Coded')
+		load(CKPT_Name_Fullpath,'JobName','DATA_Name_Fullpath','UnitaryFunc','EvolFunc','C_Numbers_Hdim','TotalTimeSteps','SystemSizeValues','Number_SystemSizes','SystemSize_Index','MeasurementProbabilityValues','Number_MeasurementProbabilities','MeasurementProbability_Index','InteractingProbabilityValues','Number_InteractingProbabilities','InteractingProbability_Index','RunOptions','CircuitsPerSystemSize','TimeStepsBeforeSaving','Number_ParallelStates','Number_TimesLoaded','Number_TimesCalculationsSaved','CircuitsPerSystemSize_Counter','TimeSteps_CurrentState','TimeBeforeMakingBKUP','TimeBeforeMakingBKUP_Counter','CurrentNumber_TimesBackedUp','InitializeState','StateArray_Coded')
         fprintf('\n QSE: CKPT Load attempt successful...')
 		LoadAttempts = -1;
 
@@ -224,7 +224,7 @@ while LoadAttempts==0
 		try
 
 			fprintf('\n QSE: Loading CKPT variables...')
-			load(CKPT_Name_Fullpath,'JobName','DATA_Name_Fullpath','UnitaryFunc','EvolFunc','C_Numbers_Int','TotalTimeSteps','SystemSizeValues','Number_SystemSizes','SystemSize_Index','MeasurementProbabilityValues','Number_MeasurementProbabilities','MeasurementProbability_Index','InteractingProbabilityValues','Number_InteractingProbabilities','InteractingProbability_Index','RunOptions','CircuitsPerSystemSize','TimeStepsBeforeSaving','Number_ParallelStates','Number_TimesLoaded','Number_TimesCalculationsSaved','CircuitsPerSystemSize_Counter','TimeSteps_CurrentState','TimeBeforeMakingBKUP','TimeBeforeMakingBKUP_Counter','CurrentNumber_TimesBackedUp','InitializeState','StateArray_Coded')
+			load(CKPT_Name_Fullpath,'JobName','DATA_Name_Fullpath','UnitaryFunc','EvolFunc','C_Numbers_Hdim','TotalTimeSteps','SystemSizeValues','Number_SystemSizes','SystemSize_Index','MeasurementProbabilityValues','Number_MeasurementProbabilities','MeasurementProbability_Index','InteractingProbabilityValues','Number_InteractingProbabilities','InteractingProbability_Index','RunOptions','CircuitsPerSystemSize','TimeStepsBeforeSaving','Number_ParallelStates','Number_TimesLoaded','Number_TimesCalculationsSaved','CircuitsPerSystemSize_Counter','TimeSteps_CurrentState','TimeBeforeMakingBKUP','TimeBeforeMakingBKUP_Counter','CurrentNumber_TimesBackedUp','InitializeState','StateArray_Coded')
 			fprintf('\n QSE: CKPT Load attempt successful...')
 			LoadAttempts = -1;
 
@@ -249,7 +249,7 @@ while LoadAttempts==0
 		try
 
 			fprintf('\n QSE: Loading CKPT_BKUP variables...')
-			load(CKPT_Name_Fullpath_BKUP,'JobName','DATA_Name_Fullpath','UnitaryFunc','EvolFunc','C_Numbers_Int','TotalTimeSteps','SystemSizeValues','Number_SystemSizes','SystemSize_Index','MeasurementProbabilityValues','Number_MeasurementProbabilities','MeasurementProbability_Index','InteractingProbabilityValues','Number_InteractingProbabilities','InteractingProbability_Index','RunOptions','CircuitsPerSystemSize','TimeStepsBeforeSaving','Number_ParallelStates','Number_TimesLoaded','Number_TimesCalculationsSaved','CircuitsPerSystemSize_Counter','TimeSteps_CurrentState','TimeBeforeMakingBKUP','TimeBeforeMakingBKUP_Counter','CurrentNumber_TimesBackedUp','InitializeState','StateArray_Coded')
+			load(CKPT_Name_Fullpath_BKUP,'JobName','DATA_Name_Fullpath','UnitaryFunc','EvolFunc','C_Numbers_Hdim','TotalTimeSteps','SystemSizeValues','Number_SystemSizes','SystemSize_Index','MeasurementProbabilityValues','Number_MeasurementProbabilities','MeasurementProbability_Index','InteractingProbabilityValues','Number_InteractingProbabilities','InteractingProbability_Index','RunOptions','CircuitsPerSystemSize','TimeStepsBeforeSaving','Number_ParallelStates','Number_TimesLoaded','Number_TimesCalculationsSaved','CircuitsPerSystemSize_Counter','TimeSteps_CurrentState','TimeBeforeMakingBKUP','TimeBeforeMakingBKUP_Counter','CurrentNumber_TimesBackedUp','InitializeState','StateArray_Coded')
 
 			if QSE_CheckCKPTVarFailure(CKPT_UsedVariables)
 				LoadAttempts = 3;
@@ -278,7 +278,7 @@ while LoadAttempts==0
 		try
 
 			fprintf('\n QSE: Loading CKPT_BKUP variables, second try...')
-			load(CKPT_Name_Fullpath_BKUP,'JobName','DATA_Name_Fullpath','UnitaryFunc','EvolFunc','C_Numbers_Int','TotalTimeSteps','SystemSizeValues','Number_SystemSizes','SystemSize_Index','MeasurementProbabilityValues','Number_MeasurementProbabilities','MeasurementProbability_Index','InteractingProbabilityValues','Number_InteractingProbabilities','InteractingProbability_Index','RunOptions','CircuitsPerSystemSize','TimeStepsBeforeSaving','Number_ParallelStates','Number_TimesLoaded','Number_TimesCalculationsSaved','CircuitsPerSystemSize_Counter','TimeSteps_CurrentState','TimeBeforeMakingBKUP','TimeBeforeMakingBKUP_Counter','CurrentNumber_TimesBackedUp','InitializeState','StateArray_Coded')
+			load(CKPT_Name_Fullpath_BKUP,'JobName','DATA_Name_Fullpath','UnitaryFunc','EvolFunc','C_Numbers_Hdim','TotalTimeSteps','SystemSizeValues','Number_SystemSizes','SystemSize_Index','MeasurementProbabilityValues','Number_MeasurementProbabilities','MeasurementProbability_Index','InteractingProbabilityValues','Number_InteractingProbabilities','InteractingProbability_Index','RunOptions','CircuitsPerSystemSize','TimeStepsBeforeSaving','Number_ParallelStates','Number_TimesLoaded','Number_TimesCalculationsSaved','CircuitsPerSystemSize_Counter','TimeSteps_CurrentState','TimeBeforeMakingBKUP','TimeBeforeMakingBKUP_Counter','CurrentNumber_TimesBackedUp','InitializeState','StateArray_Coded')
 
 			if QSE_CheckCKPTVarFailure(CKPT_UsedVariables)
 				LoadErrorStruct = struct('message','Not all variables loaded correctly','identifier',sprintf('%s:VarNotFound',SelfName))
@@ -659,7 +659,7 @@ end
 
 
 
-fprintf('\n\n.....\n Running Execution %d (%d previous successful saves)\n....\n\n',Number_TimesLoaded+1,Number_TimesCalculationsSaved+1)
+fprintf('\n\n.....\n Running Execution %d (%d previous successful saves)\n....\n\n',Number_TimesLoaded+1,Number_TimesCalculationsSaved)
 Number_TimesLoaded = Number_TimesLoaded + 1; 	%Update now that the program has launched successfully.
 if Verbose; fprintf('\n VV: Number_TimesLoaded (# of startups) updated; program launched successfully.\n'); end
 QSE_SaveData(CKPT_Name_Fullpath,{'Number_TimesLoaded','-append'},false,'CKPT -append');
@@ -866,8 +866,8 @@ while ~Complete
 									localTemp = StateArray{par_Core_Index};	% the parfor loop never modifies stateArray directly
 									for jj=1:min(par_TimeStepsBeforeSaving, par_TotalTimeSteps-TimeSteps_CurrentState)	% for if the realization subperiod does't evenly divide the total time step number
 										% apply time step TimeStepsBeforeSaving number of times:
-										[localTemp.State,localTemp.Number_Generators] = EvolFunc(localTemp.State,localTemp.Number_Generators,C_Numbers_Int,Hdim,UnitaryFunc,RunOptions,S_Metric);
-										%	Psi,NumGenerators,C_Numbers_Int,Hdim,UnitaryFunc,RunOptions,S_Metric
+										[localTemp.State,localTemp.Number_Generators] = EvolFunc(localTemp.State,localTemp.Number_Generators,C_Numbers_Hdim,Hdim,UnitaryFunc,RunOptions,S_Metric);
+										%	Psi,NumGenerators,C_Numbers_Hdim,Hdim,UnitaryFunc,RunOptions,S_Metric
 									end
 
                                 else % TimeStepsBeforeSaving is negative, so we run multiple realizations.
@@ -888,7 +888,7 @@ while ~Complete
 										end
 
 										for jj=1:par_TotalTimeSteps
-											[Current_State,par_NumGenerators] = EvolFunc(Current_State,par_NumGenerators,C_Numbers_Int,Hdim,UnitaryFunc,RunOptions,S_Metric);
+											[Current_State,par_NumGenerators] = EvolFunc(Current_State,par_NumGenerators,C_Numbers_Hdim,Hdim,UnitaryFunc,RunOptions,S_Metric);
                                         end
 						                
 										par_Bigram = Bigrams(Clip(Current_State,Hdim,IsPure),par_NumGenerators);

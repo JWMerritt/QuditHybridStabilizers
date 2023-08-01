@@ -1,4 +1,4 @@
-function Failures = Create_Jobs(password,C_Numbers_Hdim)
+function Failures = Create_Jobs(password, C_Numbers_Hdim)
 %CREATE_JOBS  Create multiple Jobs to run with the QuditHybridStabilizers
 % framework. The user will primarily work with functions/scripts such as
 % this one. The function CREATE_JOBS should be changed to reflect the Jobs
@@ -50,113 +50,139 @@ function Failures = Create_Jobs(password,C_Numbers_Hdim)
 	% Step two: make sure the input values are exactly what you want.
 	% 	They form the backbone of the jobs to follow.
     
+
+    % The statistics of the system being simulated. Should either be "Boson" or
+    % "Fermion"
+    StatisticsType = 'Boson'
 	
-	JobNickname = 'Main'
-	JobInformation = 'Enter some information here about where the code is running, and what functions it uses.'
-	JobSpecifications_Root = ''
-
-
-	Hdim = 3
-    C_Numbers_Hdim = load('C_Numbers_All.mat').C_Numbers_3;
-
-	IsPure = true
-
-	UnitaryFunc = @UnitaryMajoranaBasic
-	EvolFunc = @TimeStepMajoranaBasic
-
-	StatisticsType = 'Fermion'
-	
+    % "MeasurementProbability" and "InteractingProbability" get assigned a
+    % per-circuit value inside QuditStateEvol. The fields must be initialized
+    % though, and we must also include "StatisticsType" in this struct.
 	RunOptions = struct('MeasurementProbability',0,'InteractingProbability',0,'StatisticsType',StatisticsType)
-	%	'MeasurementProbability' and 'InteractingProbability' usually get assigned inside QuditStateEvol.
-	
-	NodeTime = '32:00:00'
-	NodeMemory = '20G'
-	
-	Number_ParallelStates = 2
-	TimeBeforeMakingBKUP = 3*60
-		% = time in seconds
-	
-	% Expected: /Output/ folder for Slurm .log files; /ExitFiles/ folder for .done files
-	
-	JobFolderName = 'Main'
-	JobFolderLocation = '/mmfs1/gscratch/stf/jm117/data/Parafermions/'
-	DiaryFolderLocation = '/mmfs1/gscratch/stf/jm117/diaries/Parafermions/'
-	CKPTFolderLocation = '/mmfs1/gscratch/stf/jm117/ckpts/Parafermions/'
-	% 	DON'T FORGET to make the CKPT directory!
-	
-    JobFolderName = 'TEST1'
-    JobFolderLocation = '/home/nerneg/Code/MATLAB/Tests/Jobs/'
-    DiaryFolderLocation = '/home/nerneg/Code/MATLAB/Tests/diaries/'
-    CKPTFolderLocation = '/home/nerneg/Code/MATLAB/Tests/ckpts/'
 
-	JobPath = cat(2,JobFolderLocation,JobFolderName)
-		%	Location of the following folders
-	SaveLocation = cat(2,JobFolderLocation,JobFolderName,'/DATA')
-		%	Location of 'FILENAME.mat' data files
-	ClusterLocation = cat(2,JobFolderLocation,JobFolderName,'/Cluster')
-		%   Location of 'Jobs' cluster folders
-	CKPT_Folder = cat(2,CKPTFolderLocation,JobNickname)  
-		%	Location of '$FILENAME_CKPT.mat' files.
-	Diary_Folder = cat(2,DiaryFolderLocation,JobNickname)
-        %   Location of the diaries, which are the outputs from the batch() jobs.
-	sh_Folder = cat(2,'/mmfs1/home/jm117/MATLAB/Parafermions/Jobs/',JobFolderName)
-		%	Location of the 'FILENAME.sh' files
+    % The on-site Hilbert space dimension of the qudits
+	Hdim = 2
+    
+    % If the Job is meant to simulate parafermions, then the Clifford numbers
+    % must be loaded. These represent all of the valid symplectic matrices
+    % which can act on parafermion states and implement valid "Clifford"
+    % unitary operations, which map a Majorana paraferion stabilizer state to a
+    % stabilizer state.
+    %   This can sometimes cause issues where MATLAB throws an error for trying
+    %   to load a file into a static workspace; if this occurs, then load the
+    %   file before calling Create_Jobs and then pass it in as an arguement.
+    %C_Numbers_Hdim = load('C_Numbers_All.mat').C_Numbers_3;
+    C_Numbers_Hdim = []
+    
+    % Is this a pure state? Determines what a trivial state looks like.
+	IsPure = true
+    
+    % The function which determines each time step. Includes calls to the
+    % Measure function.
+	EvolFunc = @TimeStepBosonBasic
+
+    % The function which determines unitary evolution. This is passed as an
+    % argument to EvolFunc.
+	UnitaryFunc = @UnitaryBosonBasic
+    
+	% Number of parallel states i.e., the number of cores that the program
+    % will be running on.
+	Number_ParallelStates = 2
+
+    % Time in seconds before making backups of the CKPT and DATA files.
+	TimeBeforeMakingBKUP = 3*60
+    
+    %%%%%%%%%%%%%%
+    % The following two parameters are used by Make_sh, which is a
+    % script-making code specific to the klone cluster of HYAK.
+
+    % The time that the script will be requesting to use the node for. Note
+    % that if you are using the CKPT queue, it seems that this time resets when
+    % the code is interrupted and restarted on another CKPT node.
+	NodeTime = '32:00:00'
+
+    % The amount of memory that the script will be requesting for the node.
+	NodeMemory = '20G'
+
+    %%%%%%%%%%%%%%
+    % File locations
 
     CKPT_Folder = '/home/nerneg/Code/MATLAB/Tests/ckpts'
     Diary_Folder = '/home/nerneg/Code/MATLAB/Tests/diaries'
-	
-	
-	%JobName,JobInformation,JobSpecifications,Hdim,IsPure,UnitaryFunc,EvolFunc,C_Numbers_Int,TotalTimeSteps,SystemSizeValues,MeasurementProbabilityValues,InteractingProbabilityValues,RunOptions,RealizationsPerSystemSize,RealizationsBeforeSaving,Number_ParallelStates,TimeBeforeMakingBKUP,SaveLocation,ClusterLocation,CKPT_Name_Fullpath)
+    
+    % The location of the Job folder. If using Make_sh, this should include an
+    % Output folder for the output of the Slurm log files, and an ExitFiles
+    % folder for the ".done" files.
+    JobPath = '/home/nerneg/Code/MATLAB/Tests/jobs/TEST1'%"/home/user/Code/JobFolder"
 
+    % The location of the final DATA file and its backups
+    SaveLocation = '/home/nerneg/Code/MATLAB/Tests/Jobs/TEST1/DATA'%"/home/user/Code/JobFolder/DATA"
+
+    % The location of the parcluster. Will contain the data for the parcluster
+    % jobs.
+    ClusterLocation = '/home/nerneg/Code/MATLAB/Tests/Jobs/TEST1/Cluster'%"/home/user/Code/JobFolder/Cluster"
+
+    % The location of the CKPT file and its backup
+    CKPT_Folder = '/home/nerneg/Code/MATLAB/Tests/ckpts'%"/highCapacityStorage/user/CKPTS/JobFolder"
+
+    % The location of the diary files.
+    Diary_Folder = '/home/nerneg/Code/MATLAB/Tests/diaries'%"/highCapacityStorage/user/Diaries/JobFolder"
+
+    % If using Make_sh, the location of the Slurm scripts
+    sh_Folder = '/home/nerneg/Code/MATLAB/Tests/Jobs/TEST1'%"/home/user/Code/JobFolder"
+	
 	
 	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 	% Step three: setup the jobs
-    % This can be done in whatever way you would like. Below is a sample, along
-    % with the local functions 'bmakeName' and 'makeFiles' to execute the
-    % functions that actually make the files.
+    % This can be done in whatever way you would like.
+    % Included is the function "makefiles" to assist with executing Make_CKPT()
 	
+    % The sizes of the systems that are to be simulated
+	SystemSizeValues = [250,500]
 
-	N__ALL_SystemSizes = 250
-	N__ALL_TotalTimeSteps = 250
-    N__ALL_CircuitsPerN = 10
-	N__ALL_TimePerSave = -3
-	%}
+    % The probability per site to be measured
+    MeasurementProbabilityValues = [0.2,0.3,0.4]
 
-	N__NumberOfSystemSizes = 1;
-	MProbs = [0.15,0.16,0.17]
-	MString = 'n016'
-	IProbs = [0,1]
-	
-	if all( [numel(N__ALL_SystemSizes)==N__NumberOfSystemSizes,...
-            numel(N__ALL_TotalTimeSteps)==N__NumberOfSystemSizes,...
-            numel(N__ALL_CircuitsPerN)==N__NumberOfSystemSizes,...
-            numel(N__ALL_TimePerSave)==N__NumberOfSystemSizes] )
-        % It's easy to mess up and not make these matrices to be the same size, so
-        % this just does a quick check.
+    % For @Free_Interactin_Unitary, the probability of choosing an interacting
+    % gate rather than a free gate. For any other unitary, this is not used and
+    % can be set to 0. This can be modified to a user-defined action, depending
+    % on the unitary function used.
+    InteractingProbabilityValues = [0,1]
 
-		for jj=1:numel(N__ALL_SystemSizes)
-			
-			SystemSizeValues = N__ALL_SystemSizes(jj)
-			CircuitsPerSystemSize = N__ALL_CircuitsPerN(jj)
-			TotalTimeSteps = N__ALL_TotalTimeSteps(jj)
-			TimeStepsBeforeSaving = N__ALL_TimePerSave(jj)
+    % Total number of circuits per system size. Must be the same size as
+    % SystemSizeValues, and the entries correspond.
+    % ( System sizes of [250,500] with Circuits of [200,100] means that the
+    % 250-site system will run 200 times, and the 500-site system will
+    % run 100 times.)
+    CircuitsPerSystemSize = [100,100]
 
-			MeasurementProbabilityValues = MProbs
-			InteractingProbabilityValues = IProbs 
+    % Total number of time steps per system. Must be the same size as
+    % SystemSizeValues, and the entries correspond.
+    TotalTimeSteps = [100,200]
 
-            % Jobs will be named [JOBNICKNAME]_d[HDIM]_N[SYSTEMSIZE]_m[MVAL]_[#]
+    % Number of time steps applied to each system before the code saves a CKPT.
+    % Must be the same size as SystemSizeValues, and the entries correspond.
+    % Negative values mean that a system of size N will run for N time steps,
+    % and the magnitude indicates how many times this is done before saving.
+    % (A system of 250 sites with a TimeStepsBeforeSaving value of -5 will run
+    % apply 250 timesteps to a trivial state, calculate the results, and do
+    % this 5 times before saving the results in the DATA file.)
+    TimeStepsBeforeSaving = [-2,100]
 
-			%JobName = bmakeNames(JobNickname,num2str(Hdim),num2str(SystemSizeValues),MString,'1');
-			JobName = 'TEST1_d3f_N250_mn016_2';
-            makeFiles
-			
-			%JobName = bmakeNames(JobNickname,num2str(Hdim),num2str(SystemSizeValues),MString,'2');
-			%makeFiles
-			
-		end
-	else
-		fprintf(' >> Error: Triple-check your numbers!!! \n')
-	end
+    % This is a string that can be used to add notes to the DATA file, for
+    % categorizing it in the future.
+    JobInformation = 'Enter some information here about where the code is running, and what functions it uses.'
+
+    % This string is for more technical information about the job. Details such
+    % as Hdim and Number_ParallelStates are appended to the end of it in the
+    % function makeFiles().
+    JobSpecifications_Root = 'Enter some technical information here.'
+
+    JobName = 'TEST_d3'
+    makeFiles
+    % `makefiles` creates the full CKPT and diary file names, includes some
+    % details in the JobSpecifications string, and executes Make_CKPT and
+    % Make_sh.
 	
 	
 	
@@ -176,33 +202,29 @@ function Failures = Create_Jobs(password,C_Numbers_Hdim)
 	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-	
-	
-	
-	function Fname = makeNames(DESIG,SSize,MProb,IProb,num)	%  ALL ENTRIES ARE STRINGS
-		Fname = cat(2,DESIG,'_N',SSize,'_m',MProb,'_i',IProb,'_',num);
-		fprintf('\n    filename: %s\n',Fname)
-	end
 
-	function Fname = bmakeNames(DESIG,HDIM,SSize,MProb,num)	%  ALL ENTRIES ARE STRINGS
-		Fname = cat(2,DESIG,'_d',HDIM,'_N',SSize,'_m',MProb,'_',num);
-		fprintf('\n    filename: %s\n',Fname)
-	end
-	
-	
-	
 	function makeFiles
-		if exist(cat(2,sh_Folder,'/',JobName,'.sh'),'file')==2
+            % If the bash script already exists, we may have a Job with this name
+            % already created, and running this code would risk overwriting the CKPT
+            % and DATA files of that Job, erasing the data. If this is something you
+            % would like to do, then remove the .sh file associated with the job.
+		if exist([sh_Folder,'/',JobName,'.sh'],'file')==2
 			fprintf('\n            Job already exists! Delete JobName.sh file if you''re sure you want to re-make this job.')
-			Failures = cat(1,Failures,JobName)
+			Failures = cat(1,Failures,JobName);
 			return
 		else
-			CKPT_Name_Fullpath = cat(2,CKPT_Folder,'/',JobName,'_CKPT');
-            Diary_Name_Fullpath = cat(2,Diary_Folder,'/',JobName)
-			JobSpecifications = cat(2, JobSpecifications_Root, sprintf('Hdim = %d, IsPure = %d, Number_ParallelStates = %d',Hdim,IsPure,Number_ParallelStates));
-            %fprintf(JobName,JobInformation,JobSpecifications,Hdim,IsPure,UnitaryFunc,EvolFunc,C_Numbers_Hdim,TotalTimeSteps,SystemSizeValues,MeasurementProbabilityValues,InteractingProbabilityValues,RunOptions,CircuitsPerSystemSize,TimeStepsBeforeSaving,Number_ParallelStates,TimeBeforeMakingBKUP,SaveLocation,ClusterLocation,CKPT_Name_Fullpath)
-			Make_CKPT(JobName,JobInformation,JobSpecifications,Hdim,IsPure,UnitaryFunc,EvolFunc,C_Numbers_Hdim,TotalTimeSteps,SystemSizeValues,MeasurementProbabilityValues,InteractingProbabilityValues,RunOptions,CircuitsPerSystemSize,TimeStepsBeforeSaving,Number_ParallelStates,TimeBeforeMakingBKUP,SaveLocation,ClusterLocation,CKPT_Name_Fullpath)
-			Make_batch_sh(sh_Folder,JobPath,JobName,CKPT_Name_Fullpath,Diary_Name_Fullpath,NodeTime,NodeMemory,Number_ParallelStates)
+			CKPT_Name_Fullpath = [CKPT_Folder,'/',JobName,'_CKPT'];
+            Diary_Name_Fullpath = [Diary_Folder,'/',JobName];
+			JobSpecifications = [JobSpecifications_Root, sprintf('Hdim = %d, IsPure = %d, Number_ParallelStates = %d',Hdim,IsPure,Number_ParallelStates)];
+
+            Make_CKPT(JobName,JobInformation,JobSpecifications,Hdim,IsPure,...
+                UnitaryFunc,EvolFunc,C_Numbers_Hdim,TotalTimeSteps,...
+                SystemSizeValues,MeasurementProbabilityValues,InteractingProbabilityValues,...
+                RunOptions,CircuitsPerSystemSize,TimeStepsBeforeSaving,Number_ParallelStates,...
+                TimeBeforeMakingBKUP,SaveLocation,ClusterLocation,CKPT_Name_Fullpath)
+
+            Make_sh(sh_Folder,JobPath,JobName,CKPT_Name_Fullpath,Diary_Name_Fullpath,...
+                NodeTime,NodeMemory,Number_ParallelStates)
 		end
     end
 end

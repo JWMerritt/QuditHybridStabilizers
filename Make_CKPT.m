@@ -1,5 +1,5 @@
 function Make_CKPT(JobName,JobInformation,JobSpecifications,Hdim,IsPure,...
-    UnitaryFunc,EvolFunc,C_Numbers_Int,TotalTimeSteps,...
+    UnitaryFunc,EvolFunc,C_Numbers_Hdim,TotalTimeSteps,...
     SystemSizeValues,MeasurementProbabilityValues,InteractingProbabilityValues,...
     RunOptions,CircuitsPerSystemSize,TimeStepsBeforeSaving,Number_ParallelStates,...
     TimeBeforeMakingBKUP,SaveLocation,ClusterLocation,CKPT_Name_Fullpath)
@@ -37,39 +37,9 @@ function Make_CKPT(JobName,JobInformation,JobSpecifications,Hdim,IsPure,...
 
 %Creates the initial file that QuditStateEvol will use to save its state
 %
-%  Data saved as SaveLocation/JobName.mat = DATA_Name_Fullpath.mat
-%  ckpt saved as CKPT_Name_Fullpath.mat
-%  cluster saved as "JobName", with JobStorageLocation = ClusterLocation/JobName/
-
-%   >> For use with git on hyak
-
-%{
-    Inputs:
-    DATA:
-        JobName
-        JobInformation
-        JobSpecifications
-        Hdim
-        IsPure
-    CKPT:
-        UnitaryFunc
-        EvolFunc
-        C_Numbers_Int
-        TotalTimeSteps
-        SystemSizeValues
-        MeasurementProbabilityValues
-        InteractingProbabilityValues
-        RunOptions
-        CircuitsPerSystemSize
-        TimeStepsBeforeSaving
-        Number_ParallelStates
-        TimeBeforeMakingBKUP
-    Other:
-        SaveLocation
-        ClusterLocation
-        CKPT_Name_Fullpath
-
-%}
+%  DATA saved as SaveLocation/JobName.mat = DATA_Name_Fullpath.mat
+%  CKPT saved as CKPT_Name_Fullpath.mat
+%  Cluster saved as "JobName", with JobStorageLocation = ClusterLocation/JobName/
 
 
     % These variable lists should be exactly the same as the ones which appear
@@ -90,7 +60,7 @@ CKPT_UsedVariables = {
     'DATA_Name_Fullpath'
     'UnitaryFunc'
     'EvolFunc'
-    'C_Numbers_Int'
+    'C_Numbers_Hdim'
     'TotalTimeSteps'                % should be a matrix of the same size as SystemSizeValues
     'SystemSizeValues'
     'Number_SystemSizes'
