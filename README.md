@@ -32,7 +32,7 @@ After a certain amount of time steps, the subsystem entanglement entropy is meas
 
 # How the code works
 
-Details on creating and running jobs can be found in the file [CreatingJobs.md](https://github.com/JWMerritt/QuditHybridStabilizers/main/CreatingJobs.md)
+Details on creating and running jobs can be found in the file [CreatingJobs.md](https://github.com/JWMerritt/QuditHybridStabilizers/blob/main/CreatingJobs.md)
 
 The basic action of the code is to:
 - create an initial trivial state
