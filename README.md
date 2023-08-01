@@ -1,5 +1,9 @@
 # QuditHybridStabilizers
-Stabilizer code for simulation of qudits under hybrid dynamics, including random Clifford unitary gates and projective measurements. Also includes ability to simulate Majorana parafermions with modified stabilizer formalism.
+Stabilizer code for simulation of qudits of prime order $d$ under hybrid dynamics, including random Clifford unitary gates and projective measurements.
+This code was used to produce results used in my dissertation, [Measurement-Induced Phase Transitions](https://www.proquest.com/docview/2838107649). 
+Also includes ability to simulate Majorana fermions and parafermions with a modified stabilizer formalism.
+
+This repo includes all the files necessary to set up and run a job on the [HYAK](https://hyak.uw.edu) cluster at the University of Washington.
 
 ## Background
 
@@ -28,16 +32,18 @@ After a certain amount of time steps, the subsystem entanglement entropy is meas
 
 # How the code works
 
+Details on creating and running jobs can be found in the file [CreatingJobs.md](https://github.com/JWMerritt/QuditHybridStabilizers/main/CreatingJobs.md)
+
 The basic action of the code is to:
 - create an initial trivial state
 - apply unitary and projective measurements to the state for a certain number of time steps
 - extract quantites such as the subsystem entropy from the final state.
 
-The user can define their own unitary operations and time steps, but the basic ones implement a Clifford unitary on pairs of sites (which are really symplectic matrices in the calculation) and do projective measurements.
+The user can define their own unitary operations and time steps, but the basic ones implement a Clifford unitary on pairs of sites (which are really symplectic matrices in the calculation) and perform projective measurements.
 
-This code was designed to work on the [HYAK](https://hyak.uw.edu/) supercomputer at the Unviersity of Washington. In particular, it was designed to work on the Checkpoint (CKPT) queue, which used leftover resources. The program could be killed at any time by a program with higher priority. 
+This code was designed to work on the [HYAK](https://hyak.uw.edu) supercomputer at the Unviersity of Washington. In particular, it was designed to work on the Checkpoint (CKPT) queue, in which the job runs on resources that are not being used by any other jobs. While this means that one can theroetically load many jobs at once wihtout guilt, since any other job will take priority, it also means that the program could be killed at any time. Thus, the state of the calculation is regularly saved to a file (called the `CKPT` file of the Job) from which it can be loaded. 
 
-The code is parallelized to make use of multiple cores using MATLAB `parfor` loops. The expected number of cores can be changed when the Job is set up.
+The code is parallelized to make use of multiple cores using MATLAB `parfor` loops. The expected number of cores can be set when the Job is set up.
 
 ## Details
 
