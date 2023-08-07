@@ -75,22 +75,22 @@ function Failures = Create_Jobs(password, C_Numbers_Hdim)
     C_Numbers_Hdim = []
     
     % Is this a pure state? Determines what a trivial state looks like.
-	IsPure = true
+    IsPure = true
     
     % The function which determines each time step. Includes calls to the
     % Measure function.
-	EvolFunc = @TimeStepBosonBasic
+    EvolFunc = @TimeStepBosonBasic
 
     % The function which determines unitary evolution. This is passed as an
     % argument to EvolFunc.
-	UnitaryFunc = @UnitaryBosonBasic
+    UnitaryFunc = @UnitaryBosonBasic
     
-	% Number of parallel states i.e., the number of cores that the program
+    % Number of parallel states i.e., the number of cores that the program
     % will be running on.
-	Number_ParallelStates = 2
+    Number_ParallelStates = 2
 
     % Time in seconds before making backups of the CKPT and DATA files.
-	TimeBeforeMakingBKUP = 3*60
+    TimeBeforeMakingBKUP = 3*60
     
     %%%%%%%%%%%%%%
     % The following two parameters are used by Make_sh, which is a
@@ -99,37 +99,34 @@ function Failures = Create_Jobs(password, C_Numbers_Hdim)
     % The time that the script will be requesting to use the node for. Note
     % that if you are using the CKPT queue, it seems that this time resets when
     % the code is interrupted and restarted on another CKPT node.
-	NodeTime = '32:00:00'
+    NodeTime = '32:00:00'
 
     % The amount of memory that the script will be requesting for the node.
-	NodeMemory = '20G'
+    NodeMemory = '20G'
 
     %%%%%%%%%%%%%%
     % File locations
-
-    CKPT_Folder = '/home/nerneg/Code/MATLAB/Tests/ckpts'
-    Diary_Folder = '/home/nerneg/Code/MATLAB/Tests/diaries'
     
     % The location of the Job folder. If using Make_sh, this should include an
     % Output folder for the output of the Slurm log files, and an ExitFiles
     % folder for the ".done" files.
-    JobPath = '/home/nerneg/Code/MATLAB/Tests/jobs/TEST1'%"/home/user/Code/JobFolder"
+    JobPath = '/home/user/Code/JobFolder'
 
     % The location of the final DATA file and its backups
-    SaveLocation = '/home/nerneg/Code/MATLAB/Tests/Jobs/TEST1/DATA'%"/home/user/Code/JobFolder/DATA"
+    SaveLocation = '/home/user/Code/JobFolder/DATA'
 
     % The location of the parcluster. Will contain the data for the parcluster
     % jobs.
-    ClusterLocation = '/home/nerneg/Code/MATLAB/Tests/Jobs/TEST1/Cluster'%"/home/user/Code/JobFolder/Cluster"
+    ClusterLocation = '/home/user/Code/JobFolder/Cluster'
 
     % The location of the CKPT file and its backup
-    CKPT_Folder = '/home/nerneg/Code/MATLAB/Tests/ckpts'%"/highCapacityStorage/user/CKPTS/JobFolder"
+    CKPT_Folder = '/highCapacityStorage/user/CKPTS/JobFolder'
 
     % The location of the diary files.
-    Diary_Folder = '/home/nerneg/Code/MATLAB/Tests/diaries'%"/highCapacityStorage/user/Diaries/JobFolder"
+    Diary_Folder = '/highCapacityStorage/user/Diaries/JobFolder'
 
     % If using Make_sh, the location of the Slurm scripts
-    sh_Folder = '/home/nerneg/Code/MATLAB/Tests/Jobs/TEST1'%"/home/user/Code/JobFolder"
+    sh_Folder = '/home/user/Code/JobFolder'
 	
 	
 	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -138,7 +135,7 @@ function Failures = Create_Jobs(password, C_Numbers_Hdim)
     % Included is the function "makefiles" to assist with executing Make_CKPT()
 	
     % The sizes of the systems that are to be simulated
-	SystemSizeValues = [250,500]
+    SystemSizeValues = [250,500]
 
     % The probability per site to be measured
     MeasurementProbabilityValues = [0.2,0.3,0.4]
