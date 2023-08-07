@@ -4,7 +4,7 @@ After a calculation has been run, the final results will be contained in a `DATA
 
  - `SystemSize` - the size of the system
  - `MeasurementProbability` - the probability per-site of a projective measurement
- - `InteractingProbability` - usually equal to 0; see [CreatingJobs/Parameters](https://github.com/JWMerritt/QuditHybridStabilizers/main/CreatingJobs.md#Parameters) for more information
+ - `InteractingProbability` - usually equal to 0; see [CreatingJobs/Parameters](https://github.com/JWMerritt/QuditHybridStabilizers/blob/main/CreatingJobs.md#Parameters) for more information
  - `TotalTimeSteps` - the total number of time steps applied to the system
  - `SubsystemEntropy` - a cell array, containing column vectors which correspond to the subsystem entropy of the realizations calculated by `QuditStateEvol`. `Out(i).SubsystemEntropy{j}(k)` gives the average entropy of all subsystems of length `k` in the realization numbered `j` defined by the parameters given in `Out(i)`.
  - `LengthDistribution` - a cell array containing column vectors which correspond to the length distribution of the realizations. `Out(i).LengthDistribution{j}(k)` gives the total number of generators of length `k` in the realization numbered `j` defined by the parameters given in `Out(i)`. For more information, see [this paper by Li, Chen, and Fisher (2019)](https://doi.org/10.1103/PhysRevB.100.134306). Note that the Length Distribution given in this code is 1 larger than that defined in the paper, and is not normalized by system size.
