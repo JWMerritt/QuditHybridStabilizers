@@ -1,6 +1,6 @@
 # Creating Jobs for QuditHybridStabilizers
 
-Each Job has a number of quantities associated with it which must be set before the program runs. For more information extracting the data out of the final `DATA` file, see [COllectingData.md]()
+Each Job has a number of quantities associated with it which must be set before the program runs. For more information extracting the data out of the final `DATA` file, see [CollectingData.md](https://github.com/JWMerritt/QuditHybridStabilizers/blob/main/CollectingData.md)
 
 ## Structure of QuditStateEvol
 
@@ -30,7 +30,7 @@ Once a circuit has been completed and we have a nubmer of realizations, the rele
 
 ## Parameters
 
-The file [Create_Jobs.m](https://github.com/JWMerritt/QuditHybridStabilizers/main/Create_Jobs.m) gives an example of how to set up a Job. It includes a list of necessary parameters and a description of each. The most important system parameters are:
+The file [Create_Jobs.m](https://github.com/JWMerritt/QuditHybridStabilizers/blob/main/Create_Jobs.m) gives an example of how to set up a Job. It includes a list of necessary parameters and a description of each. The most important system parameters are:
 
  - `Hdim` - the on-site local Hilbert space dimension (i.e., the number of states per qudit). Should always be a prime integer.
  - `SystemSizeValues` - a double array of system sizes.
