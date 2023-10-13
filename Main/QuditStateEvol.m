@@ -24,18 +24,14 @@ function QuditStateEvol(CKPT_Name_Fullpath,CodeLocation,Verbose)
 %
 %   See also MAKE_CKPT, RUNBATCH
 
-RunVersion = 'RELEASE_0.9';
+RunVersion = 'RELEASE_1.0';
 SelfName = 'QuditStateEvol'; % Here to have the correct documentation for errors.
 
 if nargin<3
-    Verbose=false;
+    Verbose=false; % Verbose=true will write more debug data to the output
 end
 
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+%	These are the saved DATA variables that we need to run the code	
 DATA_UsedVariables = {
     'Out'
     'JobName'
@@ -45,9 +41,8 @@ DATA_UsedVariables = {
     'IsPure'
     'Job_RunLog'
     };
-%	These are the saved DATA variables that we need to run the code	
 
-
+%	These are the CKPT variables that we need to run the code
 CKPT_UsedVariables = {
     'JobName'
     'DATA_Name_Fullpath'
@@ -78,9 +73,8 @@ CKPT_UsedVariables = {
     'InitializeState'
     'StateArray_Coded'
     };
-%	These are the CKPT variables that we need to run the code
 
-
+%	These are the extra variables we include with the DATA_BKUP files, so that we can resume calculations from this point.
 DATA_BKUPVariables = cat(1,DATA_UsedVariables,{
 	'BKUP_InfoString'
 	'SystemSize_Index'
@@ -88,62 +82,18 @@ DATA_BKUPVariables = cat(1,DATA_UsedVariables,{
 	'InteractingProbability_Index'
 	'CircuitsPerSystemSize_Counter'
 	});
-%	These are the extra variables we include with the DATA_BKUP files, so that we can resume calculations from this point.
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%	Load helper functions
-%	The MATLAB compiler throws a fit if it doesn't explicitly see the variables being loaded from the files.
-%	The following functions put these variable lists into a nice format you can copy and paste in the 8 load calls below
-%	Copy all the code from this first part of the function and run it separately to get a printout of the lines you need,
-%		and then paste them below.
-
-%{
-CKPT_LoadString = '''';
-% This is the list of all the variables that we load the CKPT file.
-for ii=1:numel(CKPT_UsedVariables)
-	CKPT_LoadString = cat(2,CKPT_LoadString,CKPT_UsedVariables{ii});
-	if ii~=numel(CKPT_UsedVariables)
-		CKPT_LoadString = cat(2,CKPT_LoadString,''',''');
-	else
-		CKPT_LoadString = cat(2,CKPT_LoadString,'''');
-	end
-end
-
-DATA_LoadString = '''';
-% This is the list of all the variables that we save to the DATA file.
-for ii=1:numel(DATA_UsedVariables)
-	DATA_LoadString = cat(2,DATA_LoadString,DATA_UsedVariables{ii});
-	if ii~=numel(DATA_UsedVariables)
-		DATA_LoadString = cat(2,DATA_LoadString,''',''');
-	else
-		DATA_LoadString = cat(2,DATA_LoadString,'''');
-	end
-end
-
-fprintf('\n%s\n',CKPT_LoadString)
-fprintf('\n%s\n',DATA_LoadString)
-%}
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
-
-
-
-
 
 addpath(genpath(CodeLocation))
 
-CKPT_SaveString = '''-v7.3';
     % This is the list of all the variables that we save to the CKPT file.
+CKPT_SaveString = '''-v7.3';
 for ii=1:numel(CKPT_UsedVariables)
 	CKPT_SaveString = cat(2,CKPT_SaveString,''',''',CKPT_UsedVariables{ii});
 end
 CKPT_SaveString = cat(2,CKPT_SaveString,'''');
 
-DATA_SaveString = '''';
     % This is the list of all the variables that we save to the DATA file.
+DATA_SaveString = '''';
 for ii=1:numel(DATA_UsedVariables)
 	DATA_SaveString = cat(2,DATA_SaveString,DATA_UsedVariables{ii});
 	if ii~=numel(DATA_UsedVariables)
@@ -153,8 +103,8 @@ for ii=1:numel(DATA_UsedVariables)
 	end
 end
 
-DATA_BKUP_SaveString = '''';
     % This is the list of all the variables that we save to the DATA BKUP file.
+DATA_BKUP_SaveString = '''';
 for ii=1:numel(DATA_BKUPVariables)
 	DATA_BKUP_SaveString = cat(2,DATA_BKUP_SaveString,DATA_BKUPVariables{ii});
 	if ii~=numel(DATA_BKUPVariables)
@@ -171,24 +121,17 @@ fprintf(cat(2,'\n QSE: Starting CKPT load code.\n QSE: CKPT file:\n   ',CKPT_Nam
 if Verbose; whos; pause(10); end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-	%	Load Code
+	%	Load the files
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %{
+Load the CKPT file
+
 	Pseudocode:
-		We try to load the CKPT file 2 times.
-		We then try to load the BKUP CKPT file 2 times.
+		Try to load the CKPT file 2 times.
+		If that fails, try to load the BKUP CKPT file 2 times.
 			If it succeeds, we overwrite the CKPT file with the loaded variables, and try again from the top.
 			If they both fail, then the program ends
-		
-		Variables:
-			LoadAttempts: how many attempts we've made at loading any of the variables. @=-1 means we've succeeded
-			CKPT_LoadedFromBKUP: true if we've had to load the variables from BKUP and overwrite the CKPT file; false if not.
-			LoadFail: the error we get when a load() fails
-			LoadErrorStruct: the error struct that gets thrown when none of the load() functions succeed.
-
-		Functions:
-			QSE_CheckCKPTVarFailure(): explicitly checks the existence of the variables we want to load.
 %}
 
 LoadAttempts = 0;
@@ -304,28 +247,17 @@ end
 
 fprintf('\n QSE: Current Run Info - current successful run: %d (current successful load: %d)\n',Number_TimesCalculationsSaved+1,Number_TimesLoaded+1)
 
-
-		%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-		%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 %{
-	Pseudocode:
-		We try to load the DATA file 2 times.
-		We then try to load the BKUP_A DATA file 2 times.
-		We then try to load the BKUP_B DATA file 2 times.
-			If either succeeds, we overwrite the DATA file with the loaded variables, and try again from the top.
-			If they all fail, then the program ends
-		
-		Variables:
-			LoadAttempts: how many attempts we've made at loading any of the variables. @=-1 means we've succeeded
-			DATA_LoadedFromBKUP: true if we've had to load the variables from BKUP and overwrite the CKPT file; false if not.
-			LoadFail: the error we get when a load() fails
-			LoadErrorStruct: the error struct that gets thrown when none of the load() functions succeed.
+Load the DATA file
 
-		Functions:
-			QSE_CheckDATAVarFailure(): explicitly checks the existence of the variables we want to load.
-%}
-		
+	Pseudocode:
+		Try to load the DATA file 2 times.
+		If that fails, try to load the BKUP_A DATA file 2 times.
+		If that fails, try to load the BKUP_B DATA file 2 times.
+			If either _A or _B succeeds, we overwrite the DATA file with variables loaded from BKUP, and try again from the top.
+			If they all fail, then the program ends
+
+%}	
 
 if Verbose; whos; pause(10); end
 
@@ -521,95 +453,7 @@ if CKPT_WasLoadedFromBKUP || DATA_WasLoadedFromBKUP
 	%	if DATA loaded from backup, resave CKPT to save new _Index values corresponding to restored DATA.
 end
 
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-	%	parpool code
-    %   The following code may be necessary for running QuditStateEvol directly
-    %   on a node; however, it should not be necessary when batching the code
-    %   through RunBatch().
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-%{
-if Verbose; whos; pause(10); end
-fprintf('\n X: Starting Cluster and Parpool.\n')
-
-ClusterSuccess = false;
-ParpoolSuccess = false;
-
-InheritedPool=gcp('nocreate');
-if max(size(InheritedPool))~=0	%	There's already a pool present!
-	if RC && isequal(InheritedPool.Cluster.Profile,'RunContainer')
-		fprintf('\n XX: RunContainer pool already present, so we''ll just go with this.')
-		RunPool = gcp('nocreate');
-		ParpoolSuccess = true;
-		ClusterSuccess = true;
-	else
-		fprintf('\n XX: Pool already created... Not really gonna deal with this...')
-		delete(InheritedPool)
-		fprintf('\n XX: Pool deleted...')
-	end
-end
-
-while ~ClusterSuccess
-
-	fprintf('\n XX: Starting Cluster...\n')
-	try
-		
-		if RC
-			RunCluster = parcluster('RunContainer');
-		else
-			RunCluster = parcluster(JobName);
-		end
-
-		ClusterSuccess = true;
-
-		if Verbose
-			RunCluster
-		end
-
-		fprintf('\n XX: Deleting old cluster jobs...\n')
-		delete(RunCluster.Jobs)
-		fprintf('\n XX: ...Done. Hopefully...')
-
-	catch ClusterFail
-		fprintf('\n >>: Cluster failed to start!')
-		fprintf('\n ~~ %s',ClusterFail.identifier)
-		fprintf('\n ~~ "%s"',ClusterFail.message)
-		fprintf('\n >>: Retrying...\n')
-	end
-
-end
-
-while ~ParpoolSuccess
-	try
-		RunPool = parpool(RunCluster,Number_ParallelStates)
-		ParpoolSuccess = true;
-	catch PoolFail
-		fprintf('\n >>: Parpool failed to start!')
-		fprintf('\n ~~ %s',PoolFail.identifier)
-		fprintf('\n ~~ "%s"',PoolFail.message)
-		fprintf('\n >>: Retrying...')
-	end
-end
-
-
-
-if Verbose
-	pwd
-	RunCluster
-	RunPool
-	whos
-	pause(10)
-end
-%}
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
 fprintf('\n Date: %s',datetime("now"))
-
 
 CurrentNumberOfRealizations = -1;
 try         %   this is for when the corresponding entry of Out hasn't been initialized yet...
@@ -617,7 +461,6 @@ try         %   this is for when the corresponding entry of Out hasn't been init
 catch
 	CurrentNumberOfRealizations = 0;
 end
-
 
 Job_RunLog_Current = sprintf('Beginning code execution number %d attempt (with %d successful runs) at %s, with code version %s. Starting at System Size = %d, with %d realizations.',Number_TimesLoaded+1,Number_TimesCalculationsSaved+1,datetime("now"),RunVersion,SystemSizeValues(SystemSize_Index),CurrentNumberOfRealizations);
 if CKPT_WasLoadedFromBKUP == true
@@ -630,8 +473,8 @@ if DATA_WasLoadedFromBKUP == true
 end
 
 
+	% Job_RunLog comes from the CKPT file, and is a column cell of strings containing run data
 Job_RunLog = cat(1,Job_RunLog,{Job_RunLog_Current});
-	% Job_RunLog comes from the CKPT file, and is a column cell of strings with the run data
 QSE_SaveData(DATA_Name_Fullpath,{'Job_RunLog','-append'},false,'DATA -append');
 
 
@@ -657,10 +500,8 @@ if isfield(RunOptions,'StatisticsType')
     end
 end
 
-
-
 fprintf('\n\n.....\n Running Execution %d (%d previous successful saves)\n....\n\n',Number_TimesLoaded+1,Number_TimesCalculationsSaved)
-Number_TimesLoaded = Number_TimesLoaded + 1; 	%Update now that the program has launched successfully.
+Number_TimesLoaded = Number_TimesLoaded + 1; 	% Update now that the program has launched successfully.
 if Verbose; fprintf('\n VV: Number_TimesLoaded (# of startups) updated; program launched successfully.\n'); end
 QSE_SaveData(CKPT_Name_Fullpath,{'Number_TimesLoaded','-append'},false,'CKPT -append');
 
@@ -668,8 +509,6 @@ StateArray = cell(Number_ParallelStates,1);
 if TimeStepsBeforeSaving(SystemSize_Index)>0
 	QSE_DecodeStateArray();
 end
-
-
 
 runFresh = true; 	% This will let us know when the program has successfully contributed data.
 
@@ -683,15 +522,14 @@ while ~Complete
 
 	try
 
-				%{	
+		%{	
 		pseudocode:
         (SS=SystemSize, MP=MeasurementProbability, IP=InteractingProbability)
 
-			While we still have some  values to do:
+			While we still have some values to do:
 
 				Run circuits until we hit the limit for that SS value ( CircuitsPerSystemSize(SystemSize_Index) ).
-				Each circuit includes one (or more) realizations for each value of MP and IP for that SS value.
-					The number of realizations per loop is (TimeStepsBeforeSaving).
+				Each circuit includes creating one (or more) realizations for each value of MP and IP for that SS value.
 
 				While we have circuits / realizations left to complete:
 					Get our current state for a realization.
@@ -700,25 +538,22 @@ while ~Complete
                           and save our progress to the CKPT file.
 						Or run a number of full realzations if CircuitsPerSystemSize value < 0.
 						
-				When we have some completed realizations, calculate the entropies, and save it to the DATA file.
+				When we have some completed realizations, calculate the entropies, and save them to the DATA file.
 
 				When we hit the CircuitsPerSystemSize limit of circuits for that SS value, move to the next SS value
 			
 			When we run out of SS values, exit the program successfully.
 			
 			donefile.m should put a flag up to stop queueing the job.
-		
+        %}
 
-		%}
-		Completed = false;
+		Complete = false;
 		
 		while SystemSize_Index<=Number_SystemSizes
 		%	We complete a System Size before moving on to the next.
-
 		
 			fprintf('\nSystem Size = %d',SystemSizeValues(SystemSize_Index));
 			if Verbose; fprintf('\n VV: System Size Index = %d',SystemSize_Index); end
-			
 
 			%   S_Metric calculation, based on StatisticsType
 			if System_Is_Fermionic
@@ -728,9 +563,11 @@ while ~Complete
 			else    % Defaults to fermions.
 				S_Metric = SymplecticMetricMajorana(SystemSizeValues(SystemSize_Index));
 			end
-
+            
+                % This variable is for catching an error that happened in previous
+                % versions, in which a realization would be "complete", but contain no
+                % states (the StateArray would be empty).
 			StateArrayIsEmptyCounter = 0; 	% we will also reset this to zero after each full circuit
-
 
 			while CircuitsPerSystemSize_Counter <= CircuitsPerSystemSize(SystemSize_Index)
 				%	We'll iterate over this loop after every successful realization save.
@@ -738,12 +575,11 @@ while ~Complete
 				%   Circuits counter will come from the CKPT data
 				if Verbose; fprintf('\n VV: Top of the ''circuits'' loop. Beginning realization code.'); end
 				
-				
 				if TimeStepsBeforeSaving(SystemSize_Index)<0
 						% If so, then we'll be doing multiple realizations per run, so
 						% we don't worry about saving or overwriting states here, and
 						% we'll reset the StateArray every time.
-					    if Verbose; fprintf('\n VV: Initializing stateArray as empty.'); end
+					if Verbose; fprintf('\n VV: Initializing stateArray as empty.'); end
 
 					InitializeState = false;
 					% 	Note this doesn't really matter, as we'll never make it to
@@ -756,7 +592,7 @@ while ~Complete
 					    if Verbose; fprintf('\n VV: Initializing TrivState'); end
 
 					if IsPure
-                            if Verbose; fprintf(' for IsPure == true ( TrivState() ).'); end
+                        if Verbose; fprintf(' for IsPure == true ( TrivState() ).'); end
 						if System_Is_Bosonic
 							StartState = TrivStateBoson(SystemSizeValues(SystemSize_Index));
                         else
@@ -764,7 +600,7 @@ while ~Complete
                         end
 						Number_Generators = SystemSizeValues(SystemSize_Index);
 					else
-                            if Verbose; fprintf(' for IsPure == false ( Zeros state ).'); end
+                        if Verbose; fprintf(' for IsPure == false ( Zeros state ).'); end
 						StartState = zeros(SystemSizeValues(SystemSize_Index),2*SystemSizeValues(SystemSize_Index));
 						Number_Generators = 0;
 					end
@@ -788,7 +624,6 @@ while ~Complete
 					currentReals = 0;
 				end
 				
-				
 						%%%%%%%%%%%%%%%%%%%%%%%%		%%%%%%%%%%%%%
 				fprintf(['\n\n  Running circuit %d / %d',...
                     '\n    MeasurementProbability = %.3f   (%d/%d),',...
@@ -798,9 +633,7 @@ while ~Complete
                     CircuitsPerSystemSize_Counter,CircuitsPerSystemSize(SystemSize_Index),MeasurementProbabilityValues(MeasurementProbability_Index),MeasurementProbability_Index,Number_MeasurementProbabilities,InteractingProbabilityValues(InteractingProbability_Index),InteractingProbability_Index,Number_InteractingProbabilities,currentReals,datetime("now"));
 						%%%%%%%%%%%%%%%%%%%%%%%%		%%%%%%%%%%%%%
 				
-				
 				%                       Here's the meat:
-				
 				
 				while TimeSteps_CurrentState < TotalTimeSteps(SystemSize_Index) 	% This is the loop that calculates the realization(s). We'll usually get killed in the middle of this while loop.                       
 					% Shoud be "less than" here, since it should jump to the SS in intervals of
@@ -810,7 +643,6 @@ while ~Complete
                     % to the system size, and should not do any more time steps;
                     % correspondingly, this loop will not run, since matTime ~< NVals.)
 
-					
 					% All the below self-declarations and stuff are necessary to get the parfor
 					% loop to use these variables. Something weird with Hyak's CKPT queue, idk.
 
@@ -1096,15 +928,14 @@ while ~Complete
 				%	We now have a completed realization!
 				% 	Now that we have the realization(s), we get the data from it.
 
-				
-				    if Verbose; fprintf('\n VV: matTime loop completed.'); end
+				if Verbose; fprintf('\n VV: matTime loop completed.'); end
 				
 				%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 				%	Calculate the quantities of this realization:
 
 				if TimeStepsBeforeSaving(SystemSize_Index) > 0			% Calculate the entropies
 
-					    if Verbose; fprintf('\n VV: Doing entropy calculation...'); end 
+					if Verbose; fprintf('\n VV: Doing entropy calculation...'); end 
 					
 					%	The relevant Out().Argument is a column cell that the following will be
                     %	appended to.
@@ -1194,9 +1025,7 @@ while ~Complete
 				%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 				%	Now that we've calculated the quantities, let's collect the data:
 					
-
 				if ~StateArrayIsEmpty
-
 					Out(SystemSize_Index,MeasurementProbability_Index,InteractingProbability_Index).SystemSize = SystemSizeValues(SystemSize_Index);
 					Out(SystemSize_Index,MeasurementProbability_Index,InteractingProbability_Index).MeasurementProbability = MeasurementProbabilityValues(MeasurementProbability_Index);
 					Out(SystemSize_Index,MeasurementProbability_Index,InteractingProbability_Index).InteractingProbability = InteractingProbabilityValues(InteractingProbability_Index);
@@ -1226,8 +1055,6 @@ while ~Complete
 						%	Hypothesis: we save the _Index variables here, using -append, so that on the next run, the system knows to do the next point.
 						%	If StateArray is empty, we skip this, and the _Index variables stay the same. 
 						%	The following reset code still goes through, and we just re-run this point.
-					%QSE_SaveData(CKPT_Name_Full,CKPT_SaveString,true,'CKPT');
-
 				elseif StateArrayIsEmptyCounter>=20
 					fprintf('\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
 					fprintf('\n            MAJOR ERROR: stateArray consistently empty. Returning...')
@@ -1236,7 +1063,6 @@ while ~Complete
 					error(ErStr)
 				end % End of Data collecting if-end statement
 				
-
 				%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 				%	Now that we've collected the data (or not if StateArray was empty),
 				%	Let's save our progress:
@@ -1246,7 +1072,7 @@ while ~Complete
 				QSE_SaveData(DATA_Name_Fullpath, DATA_UsedVariables, true, 'DATA');
 				QSE_SaveData(CKPT_Name_Fullpath, [CKPT_UsedVariables;'-v7.3'], true, 'CKPT');
 				
-				    if Verbose; fprintf(' VV: circuit run complete. SystemSize_Index = %d, MeasurementProbability_Index = %d, InteractingProbability_Index = %d, CircuitsPerSystemSize_Counter = %d',SystemSize_Index,MeasurementProbability_Index,InteractingProbability_Index,CircuitsPerSystemSize_Counter); end
+				if Verbose; fprintf(' VV: circuit run complete. SystemSize_Index = %d, MeasurementProbability_Index = %d, InteractingProbability_Index = %d, CircuitsPerSystemSize_Counter = %d',SystemSize_Index,MeasurementProbability_Index,InteractingProbability_Index,CircuitsPerSystemSize_Counter); end
 				
 			end 	
 
@@ -1274,9 +1100,7 @@ while ~Complete
         %	SystemSizeValues, and SystemSize_Index > Number_SystemSizes
 		fprintf('\n\n\n      All done??\n\n')
 		
-		Completed = true;
-
-
+		Complete = true;
 
 
 	catch MainFail
@@ -1310,26 +1134,9 @@ end
 fprintf('\n\n\n      All done!!\n\n')
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 	%	Local Functions
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
-
 
 
 function SaveSuccesses__ = QSE_SaveData(File,ItemsList,LoadTest,RefName)
@@ -1375,10 +1182,6 @@ function SaveSuccesses__ = QSE_SaveData(File,ItemsList,LoadTest,RefName)
 end
 
 
-
-
-
-
 function varsFailed = QSE_CheckCKPTVarFailure(Vars)
 %	checks if all of the expected variables were loaded from the CKPT file
 %	local variables: Vars, failVars, VarExist, varsFailed
@@ -1401,9 +1204,6 @@ function varsFailed = QSE_CheckCKPTVarFailure(Vars)
 		varsFailed = false;
 	end		
 end
-
-
-
 
 
 function varsFailed = QSE_CheckDATAVarFailure(Vars)
@@ -1429,9 +1229,6 @@ function varsFailed = QSE_CheckDATAVarFailure(Vars)
 		varsFailed = false;
 	end		
 end
-
-
-
 
 
 function QSE_EncodeStateArray()
@@ -1478,9 +1275,6 @@ function QSE_DecodeStateArray()
 end
 
 
-
-
-
 function QSE_PrintStack(ErrorIn)
 %	takes the ErrorIn error structure and prints the stack as would a usual error
 
@@ -1490,10 +1284,6 @@ function QSE_PrintStack(ErrorIn)
 
 end
 
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 end
 

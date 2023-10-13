@@ -1,6 +1,6 @@
 # QuditHybridStabilizers
 Stabilizer code for simulation of qudits of prime order $d$ under hybrid dynamics, including random Clifford unitary gates and projective measurements.
-This code was used to produce results used in my dissertation, [Measurement-Induced Phase Transitions](https://www.proquest.com/docview/2838107649). 
+This code was used to produce results used chapter 3 of my dissertation, [Measurement-Induced Phase Transitions](https://www.proquest.com/docview/2838107649). 
 Also includes ability to simulate Majorana fermions and parafermions with a modified stabilizer formalism.
 
 This repo includes all the files necessary to set up and run a job on the [HYAK](https://hyak.uw.edu) cluster at the University of Washington.
