@@ -82,12 +82,8 @@ fprintf('\n===========')
 
 fprintf('\n RB: Batching QuditSateEvol...');
 RunJob = batch(MyCluster,'QuditStateEvol',0,{CKPT_Name_FullPath,CodePath});
-if deleteAllJobsOnExit
-    cleanupObj = onCleanup(@()DeleteClusterJobs(JobName));
-    % when cleanupObj is destroyed (by ending the program, error, or ctrl+C),
-    % the function DeleteClusterJobs(JobName) is called, deleting the batch job
-    % from the cluster.
-end
+if deleteAllJobsO
+cleanupObj = onCleanup(@()DeleteClusterJobs(JobName));
 fprintf('\n RB: Done.')
 fprintf('\n RB: Running code and updating diary...\n')
 

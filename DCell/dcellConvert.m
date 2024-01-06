@@ -1,4 +1,4 @@
-function Out = DCellConvert(In)
+function Out = dcellConvert(In)
 %DCELLCONVERT  Convert a struct of data into a DCell cell array.
 %
 %   A DCell is the term for a cell array, where each entry is a struct that
