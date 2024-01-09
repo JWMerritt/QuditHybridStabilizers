@@ -1,12 +1,14 @@
-function Out = dcellCombineData(In1,In2)
-%DCELLCOMBINE  Combine two DCells into one.
-%   OUT = DCELLCOMBINE(A, B) combines two DCells A and B into one DCell.
-%
-%   This function combines data for entries with 
-%   the same independent variables.
-%   This function does not order the entries.
-%
-%   See DCELLNORMALIZE, DCELLORDER
+function Out = RDataCombineData(In1,In2)
+    %RDATACOMBINEDATA  Combine two RData.data cell arrays into one.
+    %
+    %   OUT = RDATACOMBINEDATA(A.data, B.data) combines the data cell arrays of
+    %   two RData objects A and B into one properly formatted cell array.
+    %
+    %   This function combines data for entries with 
+    %   the same independent variables.
+    %   This function does not order the entries.
+    %
+    %   See also RDATAORDER, RDATACONVERT
 
 
 Out = In1;

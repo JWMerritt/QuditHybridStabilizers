@@ -147,3 +147,11 @@ Bad read on data. StateArray{ii} = {}. Skipping this circuit entry...
     InteractingProbability = 1.000   (2/2),
     Realizations completed for these parameters: 6
   Current time: 05-Jan-2024 17:16:49
+     Completed 250 timesteps.... 01/05, 18:07  
+   -- BKUP 10 performed successfully.
+
+  Running circuit 2 / 100
+    MeasurementProbability = 0.400   (3/3),
+    InteractingProbability = 0.000   (1/2),
+    Realizations completed for these parameters: 6
+  Current time: 05-Jan-2024 18:07:33

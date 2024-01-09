@@ -36,40 +36,47 @@ if nargin<5
     deleteAllJobsOnExit = true;
 end
 
-fprintf('\n RB: Starting RunBatch.')
-fprintf('\n   Date: %s', datetime("now"))
-
 % Remove .mat extension, if present
 if numel(CKPT_Name_FullPath)>4
-    if CKPT_Name_FullPath(end-3:end)=='.mat'
-        CKPT_Name_FullPath = CKPT_Name_FullPath(1:end-4);
-    end
+    CKPT_Name_FullPath = RemoveMatExt(CKPT_Name_FullPath);
+end
+
+if exist([CKPT_Name_FullPath, '.mat'], 'file')~=2
+    fprintf('\nRB: File not found: %s.mat\n    Returning...', CKPT_Name_FullPath)
+    return
+end
+if exist(CodePath, 'dir')~=7
+    fprintf('\nRB: Code directory not found: %s.\n    Returning...', CodePath)
+    return
 end
 
 % Check for valid Diary name / directory
 if ~isfile(Diary_FullName_FullPath)
     diaryID = fopen(Diary_FullName_FullPath,'w');
-    if diaryID~=-1
-        fclose(diaryID);
-    else
+    fclose(diaryID);
+    if diaryID == -1
         errMsg = sprintf("Diary file, %s, cannot be accessed. Possibly incorrect parent directory path.", Diary_FullName_FullPath);
         errStruct = struct('message', errMsg, 'identifier', 'RunBatch::InvalidDiaryFile');
         error(errStruct)
     end
 end
 
+fprintf('\n RB: Starting RunBatch.')
+fprintf('\n   Date: %s', datetime("now"))
+
 % Print info to terminal
 fprintf('\n RB: Parallel information:\n\n===========\n')
 feature('numcores');
 
 fprintf('\n===========\n\n RB: Starting cluster with ''%s'' profile....', JobName)
-MyCluster = parcluster(JobName)
+MyCluster = parcluster(JobName);
+disp(MyCluster)
 fprintf('\n RB: Done.')
 
 fprintf('\n===========')
 
 fprintf('\n RB: Diary file:')
-fprintf('\n   %s',Diary_Fullname_Fullpath)
+fprintf('\n   %s',Diary_FullName_FullPath)
 
 fprintf('\n===========')
 
@@ -93,19 +100,19 @@ fprintf('\n RB: Running code and updating diary...\n')
 
 for ii=1:10
     pause(30) % update quickly for the first 5-10 minutes
-    if isfile(Diary_Fullname_Fullpath)
-        delete(Diary_Fullname_Fullpath);
+    if isfile(Diary_FullName_FullPath)
+        delete(Diary_FullName_FullPath);
     end
-    diary(RunJob,Diary_Fullname_Fullpath);
+    diary(RunJob,Diary_FullName_FullPath);
     fprintf('...Diary updated.\n')
 end
 
 while ~isequal(RunJob.Tasks(1).State,'finished')
     pause(5*60) % we only want the diary to update every so often.
-    if isfile(Diary_Fullname_Fullpath)
-        delete(Diary_Fullname_Fullpath);
+    if isfile(Diary_FullName_FullPath)
+        delete(Diary_FullName_FullPath);
     end
-    diary(RunJob,Diary_Fullname_Fullpath);
+    diary(RunJob,Diary_FullName_FullPath);
 end
 
 fprintf('\n RB: RunBatch ended. Task State = finished...')

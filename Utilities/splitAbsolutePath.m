@@ -1,4 +1,4 @@
-function [parentPath, filename, extension] = splitAbsolutePath(fullpath)
+function [parentPath, filename, extension] = SplitAbsolutePath(fullpath)
 
 string_input = false;
 

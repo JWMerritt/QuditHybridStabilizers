@@ -1,3 +1,5 @@
 startup.m
 makeajob.m
 Replacements.md
+*.asv
+UnitTests/*

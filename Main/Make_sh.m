@@ -1,13 +1,13 @@
-function Make_sh(sh_Folder,JobPath,JobName,CKPT_Name_Fullpath,Diary_Name_Fullpath,NodeTime,NodeMemory,Number_ParallelRealizations)
+function Make_sh(sh_Folder,CodePath,JobPath,JobName,CKPT_Name_Fullpath,Diary_FullName_Fullpath,NodeTime,NodeMemory,Number_ParallelRealizations)
 %MAKE_SH  Create a .sh file to put into the queue on HYAK.
 %
 %   MAKE_SH(SH_FOLDER, JOBPATH, JOBNAME, CKPT_NAME_FULLPATH,
-%   DIARY_NAME_FULLPATH, NODETIME, NODEMEM, NUM_PARSTATES) creates a shell
+%   DIARY_FULLNAME_FULLPATH, NODETIME, NODEMEM, NUM_PARSTATES) creates a shell
 %   script which can be added to the slurm queue of HYAK's klone cluster
 %   using `squeue`. It is set up to add a job to the CKPT queue of the STF
 %   account.
 %
-%   --  SH_FOLDER is the folder where the final shell script will be saved.
+%   -- SH_FOLDER is the folder where the final shell script will be saved.
 %
 %   -- JOBPATH is the path to the folder with the Job folder in it.
 %
@@ -15,11 +15,11 @@ function Make_sh(sh_Folder,JobPath,JobName,CKPT_Name_Fullpath,Diary_Name_Fullpat
 %
 %   -- CKPT_NAME_FULLPATH is the name of the CKPT file, along with the
 %   absolute path to get there, but *not* including the .mat file
-%   extension. E.g., `/mmfs1/gscratch/username/CKPTS/JOBNAME_CKPT'.
+%   extension. E.g., '/mmfs1/gscratch/username/CKPTS/JOBNAME_CKPT'.
 %
-%   -- DIARY_NAME_FULLPATH is the name of the diary file, along with the
-%   absolute path to get there, but *not* including the .diary file
-%   extension. E.g., `/mmfs1/gscratch/username/diaries/JOBNAME'.
+%   -- DIARY_FULLNAME_FULLPATH absolute path of the diary file, including
+%   name and file extension. E.g.,
+%   '/mmfs1/gscratch/username/DIARY/DIARYNAME.diary'.
 %
 %   -- NODETIME is a string of the form 'HH:MM:SS', and tells slurm how
 %   long to run the Job for.
@@ -33,8 +33,8 @@ function Make_sh(sh_Folder,JobPath,JobName,CKPT_Name_Fullpath,Diary_Name_Fullpat
 %
 %   See also CREATE_JOBS, DONEFILE
 
-PRIMARY_DIRECTORY = 'PRIMARY_DIRECTORY';
-fprintf(' MSH: Primary directory: %s\n', PRIMARY_DIRECTORY)
+
+fprintf(' MSH: Path to QHS code: %s\n', CodePath)
 
 if exist(cat(2,JobPath,'/ckpt_',JobName),'file')==2
     fprintf('\n            Job already exists!')
@@ -48,9 +48,10 @@ fprintf(' MSH: Full .done file: %s\n   This file will be created when the Job is
 
 
 FileID_sh = fopen(shNameFull,'w');
+% this eventually closes the file, even if there is an error while
+% executing this file
+cleanupObj = onCleanup(@() fclose(FileID_sh)); 
 
-%maybe don't put comments or blank lines in the middle of code that's
-%  supposed to act as a single line, yeah?
 fprintf(FileID_sh,...
 cat(2,'#!/bin/bash',...
 '\n#SBATCH --job-name=',JobName,...
@@ -62,21 +63,22 @@ cat(2,'#!/bin/bash',...
 '\n#SBATCH --time=',NodeTime,...
 '\n#SBATCH --chdir=',JobPath,...
 '\n#SBATCH --output=',JobPath,'/Output/',JobName,'.log'));
-%	'\n#SBATCH --mail-type=BEGIN,END','\n#SBATCH --mail-user=jm117@uw.edu'));
+
 
 fprintf(FileID_sh,['\ndate\n']);
 fprintf(FileID_sh,['while true; do\n']);
-fprintf(FileID_sh,['cd ',PRIMARY_DIRECTORY,'\n']);
+fprintf(FileID_sh,['cd ',CodePath,'\n']);
 fprintf(FileID_sh,['  module load matlab/r2021a\n']);
-fprintf(FileID_sh,['  matlab -nosplash -nodisplay -r "cd ',PRIMARY_DIRECTORY,'; addpath(genpath(''',PRIMARY_DIRECTORY,'''));',...
-    ' RunBatch(''',CKPT_Name_Fullpath,''',''',JobName,''',''',Diary_Name_Fullpath,''');',...
+fprintf(FileID_sh,['  matlab -nosplash -nodisplay -r "cd ',CodePath,'; addpath(genpath(''',CodePath,'''));',...
+    ' RunBatch(''',CKPT_Name_Fullpath,''',''',JobName,''',''',Diary_FullName_Fullpath,''');',...
     ' DoneFile(''',JobPath,''',''',JobName,''',''',CKPT_Name_Fullpath,'''); exit;"\n']);
 fprintf(FileID_sh,['  FILE=',doneNameFull,'\n']);
 fprintf(FileID_sh,['  if test -f "$FILE"; then\n    echo "Job completed";\n    break\n  fi\ndone\n\nexit 0']);
 
-fclose(FileID_sh);
 
 end
+
+
 %17/Jan/2021 - made this thing. Hope it helps.
 %12/Feb/2021 - updated this thing because I found out you can block commands inside double quotes
 %   to get multiple Matlab commands to run in one instance of the 'matlab -nosplash -nodisplay -r' thing.
