@@ -1,11 +1,13 @@
-function Out = DCellOrder(In)
-%DCELLORDER  Order the contents of the DCell by independent variable.
+function Out = RDataOrder(In)
+%RDATAORDER  Order the contents of the RData object by independent variable.
 %
-%   OUT = DCellOrder(IN) orders the entries of In by increasing value of
+%   OUT = RDATAORDER(IN) orders the entries of IN by increasing value of
 %   the independent variables, in the following order of significance:
 %       SystemSize
 %       ProbabilityValue
 %       InteractingProbability
+%
+%   See also RDATA, RDATACONVERT
 
 Out={};
 SystemSizeValues=[];
@@ -52,9 +54,9 @@ for l=1:tnum
             &(InteractingProbabilityValues==qVals(k))...
             &(TotalTimeSteps==tVals(l)))>1
         ErMsg = sprintf(['More than one entry detected for (SS,MP,IP) = (%0.0f,%0.4f,%0.4f).\n'...
-            'Use A = DCellCombine({},A) to combine duplicate entries.'],NVals(i),pVals(j),qVals(k));
+            'Use A = RDataCombineData({},A) to combine duplicate entries.'],NVals(i),pVals(j),qVals(k));
             % this sprintf is for including the newline character in the error message.
-        ErSrct = struct('message',ErMsg,'identifier','DCellOrder:DuplicateEntries');
+        ErSrct = struct('message',ErMsg,'identifier','RDataOrder:DuplicateEntries');
         Out = In1;  % This is so the error doesn't overwrite a good DCell with incomplete data.
         error(ErSrct)
     end

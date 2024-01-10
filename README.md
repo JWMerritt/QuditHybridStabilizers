@@ -1,9 +1,24 @@
 # QuditHybridStabilizers
-Stabilizer code for simulation of qudits of prime order $d$ under hybrid dynamics, including random Clifford unitary gates and projective measurements.
-This code was used to produce results used chapter 2 of my dissertation, [Measurement-Induced Phase Transitions](https://www.proquest.com/docview/2838107649). 
-Also includes ability to simulate Majorana fermions and parafermions with a modified stabilizer formalism.
+This code uses Pauli stabilizers to simulate qudits of prime order $d$ under "hybrid dynamics" -- including random Clifford unitary gates and projective measurements.
+It was used to produce results used chapter 2 of the dissertation ["Measurement-Induced Quantum Phase Transitions"](https://www.proquest.com/docview/2838107649). 
+It also includes ability to simulate Majorana fermions and parafermions with a modified stabilizer formalism.
 
 This repo includes all the files necessary to set up and run a job on the [HYAK](https://hyak.uw.edu) cluster at the University of Washington.
+
+# How the code works
+
+Details on creating and running jobs can be found in the file [CreatingJobs.md](https://github.com/JWMerritt/QuditHybridStabilizers/blob/main/CreatingJobs.md)
+
+The basic action of the code is to:
+- create an initial trivial state
+- apply unitary and projective measurements to the state for a certain number of time steps
+- extract quantites (such as the subsystem entropy) from the final state.
+
+The user can define their own unitary operations and time steps, but the basic implementation applies Clifford unitary gates on pairs of sites (an action which is implemented in code via symplectic matrices acting on real vectors) and performs projective measurements.
+
+This code was designed to work on the [HYAK](https://hyak.uw.edu) high-performance computer at the Unviersity of Washington. In particular, it was designed to work on the Checkpoint (CKPT) queue, in which the job runs on "leftover" resources not used by any other jobs. While this means that one can theroetically load many jobs at once wihtout guilt, since any other job will take priority, it also means that the program could be killed at any time without warning. Thus, the state of the calculation is regularly saved to a file (called the `CKPT` file of the Job) from which it can be loaded. 
+
+The code is parallelized to make use of multiple cores using MATLAB `parfor` loops. The expected number of cores can be set when the Job is set up.
 
 ## Background
 
@@ -30,22 +45,7 @@ This code simulates the setup defined in [this paper by Li, Chen, and Fisher (20
 
 After a certain amount of time steps, the subsystem entanglement entropy is measured for contiguous regions of the system. It is found that this entropy undergoes a phase transition as the value of $p$ is increased from $0$.
 
-# How the code works
-
-Details on creating and running jobs can be found in the file [CreatingJobs.md](https://github.com/JWMerritt/QuditHybridStabilizers/blob/main/CreatingJobs.md)
-
-The basic action of the code is to:
-- create an initial trivial state
-- apply unitary and projective measurements to the state for a certain number of time steps
-- extract quantites such as the subsystem entropy from the final state.
-
-The user can define their own unitary operations and time steps, but the basic ones implement a Clifford unitary on pairs of sites (which are really symplectic matrices in the calculation) and perform projective measurements.
-
-This code was designed to work on the [HYAK](https://hyak.uw.edu) supercomputer at the Unviersity of Washington. In particular, it was designed to work on the Checkpoint (CKPT) queue, in which the job runs on resources that are not being used by any other jobs. While this means that one can theroetically load many jobs at once wihtout guilt, since any other job will take priority, it also means that the program could be killed at any time. Thus, the state of the calculation is regularly saved to a file (called the `CKPT` file of the Job) from which it can be loaded. 
-
-The code is parallelized to make use of multiple cores using MATLAB `parfor` loops. The expected number of cores can be set when the Job is set up.
-
-## Details
+## Code Details
 
 Each Job has the following files associated with it:
  - A `CKPT` file, which holds the information pertaining to the calculation, any partially completed systems, and the locations of all the other relevant files.
@@ -55,9 +55,9 @@ Each Job has the following files associated with it:
 
 Because HYAK uses Slurm to queue jobs, and the job could be killed at any time, this code resorts to setting up an independent parallel cluster profile for each job.
 
-The calculation is run by running the function `QuditStateEvol(CKPT_FILE, CODE_PATH)`, where `CKPT_FILE` is the full path/file name (without .mat extension) of the Job's `CKPT` file, and `CODE_PATH` is the location of the folder for this repo containing QuditStateEvol and its dependencies.
+The calculation is run by the function `QuditStateEvol(CKPT_FILE, CODE_PATH)`, where `CKPT_FILE` is the full path/file name (without the `.mat` extension) of the Job's `CKPT` file, and `CODE_PATH` is the location of the folder for this repo containing `QuditStateEvol` and its dependencies.
 
-A couple of helper functions have been included for this. `Create_Jobs` is a function that formalizes creating all of the necessary variables and creating the Jobs. `RunBatch` is a function that initializes the `parcluster` and then batches `QuditStateEvol`. Using these helper functions, the Job also has:
+A couple of helper functions have been included for this. `Create_Jobs` is a function that formalizes setting all of the necessary parameters and creating the Jobs. `RunBatch` is a function that initializes the `parcluster` and then batches `QuditStateEvol`. Using these helper functions, the Job also has:
 
  - A `JobName.sh` shell script which can be batched using slurm's `squeue` command.
  - An `Output` folder which will contain the output logs from slurm.

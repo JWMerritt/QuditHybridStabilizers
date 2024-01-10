@@ -1,13 +1,10 @@
-function Out = DCellConvert(In)
-%DCELLCONVERT  Convert a struct of data into a DCell cell array.
+function Out = RDataConvert(In)
+%RDATACONVERT  Convert a struct of data into an RData.data cell array.
 %
-%   A DCell is the term for a cell array, where each entry is a struct that
-%   contains the data corresponding a particular set of independent values.
-%
-%   OUT = DCELLCONVERT(IN) converts the struct IN into an array of cells 
-%   (a DCell array), where each entry holds the data corresponding to one 
-%   value of the independent variables (SystemSize,InteractingProbability,
-%   MeasurementProbability,TotalTimeSteps).
+%   OUT = RDATACONVERT(IN) converts the struct IN into an array of cells 
+%   where each entry holds the data corresponding to one 
+%   value of the independent variables (SystemSize, InteractingProbability,
+%   MeasurementProbability, TotalTimeSteps).
 %
 %   This function does not combine data for entries with 
 %   the same independent variables.
@@ -29,6 +26,7 @@ EmptyStruct = struct('SystemSize',[],'MeasurementProbability',[],...
     'LengthDistribution',cell(1),'SubsystemEntropy',cell(1),...
     'PurificationEntropy',cell(1),'Realizations',cell(1));
 Out = {};
+
 
 for in_idx=1:numel(In)
     skip_entry = false;
